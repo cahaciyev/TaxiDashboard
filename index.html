@@ -58,12 +58,20 @@
   .sec-h .hint{font-size:12px;color:var(--mut)}
   .panel{background:var(--card);border-radius:var(--r);box-shadow:var(--sh);padding:18px}
 
-  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:-26px;position:relative;z-index:2}
-  .kpi{background:var(--card);border-radius:var(--r);padding:16px;box-shadow:var(--sh)}
-  .kpi .lab{font-size:12px;color:var(--mut);font-weight:600}
-  .kpi .big{font-size:26px;font-weight:800;letter-spacing:-.02em;margin-top:7px}
-  .kpi .big small{font-size:13px;font-weight:600;color:var(--mut)}
-  .kpi .delta{font-size:12px;font-weight:600;margin-top:3px}
+  .kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-top:-26px;position:relative;z-index:2}
+  .kpi{background:var(--card);border-radius:var(--r);padding:15px 14px;box-shadow:var(--sh);
+    border-top:3px solid transparent;position:relative;overflow:hidden}
+  .kpi::after{content:"";position:absolute;right:-10px;top:-10px;width:60px;height:60px;
+    border-radius:50%;opacity:.07;background:currentColor}
+  .kpi-t{border-top-color:var(--teal);color:var(--teal)}
+  .kpi-b{border-top-color:var(--blue);color:var(--blue)}
+  .kpi-p{border-top-color:var(--purple);color:var(--purple)}
+  .kpi-r{border-top-color:var(--red);color:var(--red)}
+  .kpi-a{border-top-color:var(--amber);color:var(--amber)}
+  .kpi .lab{font-size:11px;color:var(--mut);font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+  .kpi .big{font-size:24px;font-weight:800;letter-spacing:-.02em;margin-top:6px;color:var(--ink)}
+  .kpi .big small{font-size:12px;font-weight:600;color:var(--mut)}
+  .kpi .delta{font-size:11px;font-weight:600;margin-top:4px}
   .up{color:var(--teal)}.down{color:var(--red)}
 
   .grid2{display:grid;grid-template-columns:1.5fr 1fr;gap:14px;margin-top:22px}
@@ -153,8 +161,9 @@
   .pn-sm{font-family:'JetBrains Mono',monospace;font-weight:700}
   footer{margin:34px 0 30px;text-align:center;color:var(--mut);font-size:12px}
 
-  @media(max-width:920px){.kpis{grid-template-columns:repeat(2,1fr)}.grid2{grid-template-columns:1fr}.vgrid{grid-template-columns:1fr 1fr}}
-  @media(max-width:560px){.vgrid{grid-template-columns:1fr}.brand h1{font-size:21px}.atbl thead{display:none}}
+  @media(max-width:1060px){.kpis{grid-template-columns:repeat(3,1fr)}}
+  @media(max-width:920px){.kpis{grid-template-columns:repeat(3,1fr)}.grid2{grid-template-columns:1fr}.vgrid{grid-template-columns:1fr 1fr}}
+  @media(max-width:560px){.kpis{grid-template-columns:repeat(2,1fr)}.vgrid{grid-template-columns:1fr}.brand h1{font-size:21px}.atbl thead{display:none}}
   @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 
   /* ===== MOBİL ALT NAVİQASİYA (WhatsApp stili) ===== */
@@ -248,10 +257,11 @@
   <!-- OVERVIEW -->
   <section class="view on" id="v-ov">
     <div class="kpis">
-      <div class="kpi"><div class="lab">Son ay xalis</div><div class="big num" id="kNet">—</div><div class="delta" id="kNetD"></div></div>
-      <div class="kpi"><div class="lab">Son ay gəlir</div><div class="big num" id="kInc">—</div><div class="delta" id="kIncD"></div></div>
-      <div class="kpi"><div class="lab">Dövrün xalisi</div><div class="big num" id="kTot">—</div><div class="delta" id="kTotD"></div></div>
-      <div class="kpi"><div class="lab">Kritik bildiriş</div><div class="big num" id="kCrit">—</div><div class="delta down">sığorta · baxış · yağ · həbs</div></div>
+      <div class="kpi kpi-t"><div class="lab">Son ay xalis</div><div class="big num" id="kNet">—</div><div class="delta" id="kNetD"></div></div>
+      <div class="kpi kpi-b"><div class="lab">Son ay gəlir</div><div class="big num" id="kInc">—</div><div class="delta" id="kIncD"></div></div>
+      <div class="kpi kpi-p"><div class="lab">Dövrün xalisi</div><div class="big num" id="kTot">—</div><div class="delta" id="kTotD"></div></div>
+      <div class="kpi kpi-r"><div class="lab">Kritik bildiriş</div><div class="big num" id="kCrit">—</div><div class="delta down">sığorta · baxış · yağ · həbs</div></div>
+      <div class="kpi kpi-a" style="cursor:pointer" onclick="switchTab('daily')"><div class="lab">Ödəməyən sürücü</div><div class="big num" id="kDebt">—</div><div class="delta" id="kDebtD" style="color:var(--mut)">3+ gün ödəniş yox</div></div>
     </div>
     <div class="grid2">
       <div class="panel">
@@ -387,8 +397,41 @@ const pbColor=v=>v>=0.5?'#1E9E8F':v>=0.45?'#E29A2E':'#DD5247';
 (()=>{const d=TODAY,p=n=>n.toString().padStart(2,'0');document.getElementById('today').textContent=p(d.getDate())+'.'+p(d.getMonth()+1)+'.'+d.getFullYear();})();
 
 // ============ ALERTS ============
+function getDebtors(){
+  if(!daily.length) return [];
+  const m = daily[daily.length-1];
+  const result = [];
+  m.rows.forEach(row => {
+    let lastIdx = -1;
+    for(let i = row.vals.length-1; i >= 0; i--){
+      const v = row.vals[i];
+      if(v !== '' && v !== null && v !== undefined){ lastIdx = i; break; }
+    }
+    if(lastIdx < 0) return;
+    let streak = 0;
+    for(let i = lastIdx; i >= 0; i--){
+      const v = row.vals[i];
+      if(v === 0 || (typeof v === 'string' && v !== '' && !isNaN(+v) && +v === 0)){
+        streak++;
+      } else if(v === '' || v === null || v === undefined){
+        continue;
+      } else {
+        break;
+      }
+    }
+    if(streak >= 3) result.push({ p: row.p, days: streak, month: m.full });
+  });
+  return result.sort((a,b) => b.days - a.days);
+}
+
 function buildAlerts(){
   const out=[];
+  getDebtors().forEach(d => {
+    out.push({p:d.p, sev: d.days >= 5 ? 'crit':'warn',
+      t:'Ödəniş edilmir',
+      d: d.month+' · son '+d.days+' gün üst-üstə',
+      when: d.days+' gün', k: -d.days});
+  });
   avto.forEach(a=>{
     if(a.arrest) out.push({p:a.p,sev:'crit',t:'Avtomobil həbsdə/girovda',d:'Təcili həll tələb olunur',when:'kritik',k:-9999});
     const di=daysTo(a.insp);
@@ -454,6 +497,16 @@ function updateKpis(){
   document.getElementById('cInc').innerHTML=fmt(inc)+'<small> ₼</small>';
   document.getElementById('cPb').innerHTML=(val?(inc/val*100):0).toFixed(1)+'<small> %</small>';
   document.getElementById('fleetSub').textContent=cars.length+' maşın · 3 sahib';
+  const debtors = getDebtors();
+  document.getElementById('kDebt').textContent = debtors.length || '0';
+  if(debtors.length){
+    const names = debtors.map(d => d.p.replace(/^\d+-/,'')).join(', ');
+    document.getElementById('kDebtD').textContent = names;
+    document.getElementById('kDebtD').style.color = 'var(--amber)';
+  } else {
+    document.getElementById('kDebtD').textContent = 'Hamı ödəyib';
+    document.getElementById('kDebtD').style.color = 'var(--teal)';
+  }
 }
 const W=720,H=250,PL=46,PR=14,PT=18,PB=30;let curK=3;
 const chart=document.getElementById('chart'),tip=document.getElementById('tip');
