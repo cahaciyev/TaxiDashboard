@@ -500,7 +500,7 @@ function updateKpis(){
   const debtors = getDebtors();
   document.getElementById('kDebt').textContent = debtors.length || '0';
   if(debtors.length){
-    const names = debtors.map(d => d.p.replace(/^\d+-/,'')).join(', ');
+    const names = debtors.map(d => d.p.replace(/^\d+-/,'') + ' · ' + d.days + ' gün').join(', ');
     document.getElementById('kDebtD').textContent = names;
     document.getElementById('kDebtD').style.color = 'var(--amber)';
   } else {
