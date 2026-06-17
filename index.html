@@ -710,6 +710,7 @@ function renderAvto(){
 }
 
 // ============ GPS ============
+const GB_PROXY = ''; // Cloudflare Worker URL burada olacaq
 const GB_API   = 'https://app.geekbro.ai/be-service/drivers';
 const GB_LOGIN = 'https://app.geekbro.ai/be-service/auth/login';
 const GB_CID   = 'f5004d86-5e84-4800-aef1-be710480576a';
@@ -807,9 +808,15 @@ async function fetchGpsData(){
   document.getElementById('gpsRefreshBtn').textContent='↻ …';
   try{
     const range=gpsDateRange(gpsPeriod);
-    const r=await fetch(`${GB_API}?companyId=${GB_CID}&direction=ASC&page=0&size=100&sort=`,{
+    const endpoint = GB_PROXY
+      ? `${GB_PROXY}?companyId=${GB_CID}&direction=ASC&page=0&size=100&sort=`
+      : `${GB_API}?companyId=${GB_CID}&direction=ASC&page=0&size=100&sort=`;
+    const hdrs = GB_PROXY
+      ? {'Content-Type':'application/json'}
+      : {'Authorization':`Bearer ${gpsToken}`,'Content-Type':'application/json'};
+    const r=await fetch(endpoint,{
       method:'POST',
-      headers:{'Authorization':`Bearer ${gpsToken}`,'Content-Type':'application/json'},
+      headers:hdrs,
       body:JSON.stringify(range)
     });
     if(r.status===401||r.status===403){
