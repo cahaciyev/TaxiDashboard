@@ -1,4 +1,4 @@
-<meta charset="utf-8">
+﻿<meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Avtopark — İnteraktiv Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -227,6 +227,7 @@
       <button data-v="daily">Günlük ödənişlər</button>
       <button data-v="cars">Maşınlar</button>
       <button data-v="avto">Avtomobil & Bildirişlər</button>
+      <button data-v="gps">GPS &middot; Günlük</button>
     </div>
   </div>
 </header>
@@ -249,6 +250,10 @@
     <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
     <span class="lbl">Bildirişlər</span>
     <span class="mbadge" id="mobBadge"></span>
+  </button>
+  <button class="mnb" data-v="gps">
+    <svg viewBox="0 0 24 24"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+    <span class="lbl">GPS</span>
   </button>
 </nav>
 
@@ -319,6 +324,47 @@
     <div class="sec-h"><h2>Avtomobil vəziyyəti</h2></div>
     <div class="panel" style="overflow-x:auto">
       <table class="atbl" id="avtoTbl"></table>
+    </div>
+  </section>
+
+  <!-- GPS -->
+  <section class="view" id="v-gps">
+    <div class="sec-h">
+      <h2>GPS &mdash; Günlük Performans</h2>
+      <span class="hint" id="gpsUpdated">Yüklənir...</span>
+    </div>
+    <div class="kpis" style="grid-template-columns:repeat(3,1fr);margin-bottom:18px">
+      <div class="kpi kpi-t">
+        <div class="lab">Cəmi Məsafə</div>
+        <div class="big num" id="gpsKmTotal">—</div>
+        <div class="delta" style="color:var(--mut)">bütün avtomobillər</div>
+      </div>
+      <div class="kpi kpi-b">
+        <div class="lab">Aktiv Avtomobil</div>
+        <div class="big num" id="gpsActive">—</div>
+        <div class="delta" style="color:var(--mut)">km > 0 olan</div>
+      </div>
+      <div class="kpi kpi-p">
+        <div class="lab">Cəmi Sürüş Vaxtı</div>
+        <div class="big num" id="gpsTimeTotal">—</div>
+        <div class="delta" style="color:var(--mut)">bu gün</div>
+      </div>
+    </div>
+    <div class="panel" style="overflow-x:auto">
+      <table class="atbl" id="gpsTbl">
+        <thead><tr>
+          <th>Avtomobil</th>
+          <th>Məsafə (km)</th>
+          <th>Paylanma</th>
+          <th>Sürüş vaxtı</th>
+          <th>Boş dayanma</th>
+          <th>Bal</th>
+        </tr></thead>
+        <tbody id="gpsTblBody"></tbody>
+      </table>
+    </div>
+    <div class="hint" style="margin-top:10px">
+      Məlumat mənbəyi: Geekbro Fleet Tracking &middot; "Boş dayanma" son davamlı dayanma müddətidir.
     </div>
   </section>
 
@@ -628,8 +674,59 @@ function renderAvto(){
   document.getElementById('avtoTbl').innerHTML=h+'</tbody>';
 }
 
+// ============ GPS ============
+let gpsData = [
+  {p:"77-UZ-539", km:190.68, driveMin:272, idleMin:20, score:683},
+  {p:"77-SP-437", km:102.73, driveMin:215, idleMin:7,  score:14},
+  {p:"77-UZ-842", km:60.98,  driveMin:132, idleMin:3,  score:187},
+  {p:"77-UD-140", km:28.02,  driveMin:49,  idleMin:1,  score:254},
+  {p:"77-UD-304", km:14.27,  driveMin:42,  idleMin:9,  score:41},
+  {p:"77-BG-699", km:0.00,   driveMin:0,   idleMin:2,  score:9},
+];
+let gpsUpdatedAt = '17.06.2026';
+
+function fmtMin(m){
+  if(!m && m!==0) return '—';
+  const h=Math.floor(m/60), d=m%60;
+  return h>0 ? h+'s. '+d+'d.' : d+'d.';
+}
+
+function renderGPS(){
+  const sorted = [...gpsData].sort((a,b)=>b.km-a.km);
+  const totalKm = gpsData.reduce((s,g)=>s+g.km,0);
+  const totalMin = gpsData.reduce((s,g)=>s+g.driveMin,0);
+  const active = gpsData.filter(g=>g.km>0).length;
+
+  document.getElementById('gpsKmTotal').innerHTML = totalKm.toFixed(1)+'<small> km</small>';
+  document.getElementById('gpsActive').innerHTML = active+'<small>/'+gpsData.length+'</small>';
+  document.getElementById('gpsTimeTotal').textContent = fmtMin(totalMin);
+  document.getElementById('gpsUpdated').textContent = 'Son yenilənmə: '+gpsUpdatedAt;
+
+  let h = '';
+  sorted.forEach(g=>{
+    const pct = totalKm>0 ? (g.km/totalKm*100) : 0;
+    const col = g.km>=100?'var(--teal)':g.km>=50?'var(--blue)':g.km>0?'var(--amber)':'var(--red)';
+    const scoreCls = g.score>=100?'b-ok':g.score>=20?'b-warn':'b-crit';
+    const [a,b,c] = g.p.split('-');
+    h += `<tr>
+      <td><span class="plate"><span class="az"><small>AZ</small></span><span class="pn">${a} ${b} ${c}</span></span></td>
+      <td class="num" style="font-size:17px;font-weight:800;color:${col}">${g.km.toFixed(2)}</td>
+      <td style="min-width:120px">
+        <div style="height:8px;background:#eef1f6;border-radius:6px;overflow:hidden;margin-bottom:3px">
+          <div style="width:${pct.toFixed(1)}%;height:100%;background:${col};border-radius:6px;transition:width .4s"></div>
+        </div>
+        <div style="font-size:11px;color:var(--mut)">${pct.toFixed(0)}%</div>
+      </td>
+      <td class="num" style="font-weight:700">${fmtMin(g.driveMin)}</td>
+      <td class="num" style="color:var(--mut)">${fmtMin(g.idleMin)}</td>
+      <td><span class="badge ${scoreCls}">${g.score}</span></td>
+    </tr>`;
+  });
+  document.getElementById('gpsTblBody').innerHTML = h;
+}
+
 // ============ RENDER ALL ============
-function renderAll(){ updateKpis(); renderAlerts(); draw(curK); renderCars(curOwner); renderDaily(); renderAvto(); }
+function renderAll(){ updateKpis(); renderAlerts(); draw(curK); renderCars(curOwner); renderDaily(); renderAvto(); renderGPS(); }
 
 // tab keçidi — həm üst, həm alt nav sinxron
 function switchTab(v){
@@ -815,3 +912,4 @@ document.getElementById('refresh').addEventListener('click', loadLive);
 setInterval(loadLive, AUTO_MS);
 loadLive();
 </script>
+
