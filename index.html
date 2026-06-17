@@ -330,41 +330,71 @@
   <!-- GPS -->
   <section class="view" id="v-gps">
     <div class="sec-h">
-      <h2>GPS &mdash; Günlük Performans</h2>
-      <span class="hint" id="gpsUpdated">Yüklənir...</span>
+      <h2>GPS &mdash; Performans</h2>
+      <span class="hint" id="gpsStatus" style="transition:color .3s">—</span>
     </div>
-    <div class="kpis" style="grid-template-columns:repeat(3,1fr);margin-bottom:18px">
-      <div class="kpi kpi-t">
-        <div class="lab">Cəmi Məsafə</div>
-        <div class="big num" id="gpsKmTotal">—</div>
-        <div class="delta" style="color:var(--mut)">bütün avtomobillər</div>
+
+    <!-- Login panel (hidden when connected) -->
+    <div id="gpsLoginBox" class="panel" style="margin-bottom:16px;display:none">
+      <div style="font-size:14px;font-weight:700;margin-bottom:12px">Geekbro Bağlantısı</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
+        <div>
+          <div style="font-size:11px;color:var(--mut);font-weight:700;margin-bottom:5px">İSTİFADƏÇİ ADI</div>
+          <input id="gpsUser" placeholder="cavidhaciyevE" style="font:inherit;font-size:13px;padding:8px 12px;border:1px solid #d6deea;border-radius:9px;width:180px">
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--mut);font-weight:700;margin-bottom:5px">ŞİFRƏ</div>
+          <input id="gpsPass" type="password" placeholder="••••••••" style="font:inherit;font-size:13px;padding:8px 12px;border:1px solid #d6deea;border-radius:9px;width:180px">
+        </div>
+        <button id="gpsLoginBtn" onclick="gpsLogin()" style="font:inherit;font-size:13px;font-weight:700;background:var(--teal);color:#fff;border:0;border-radius:9px;padding:8px 20px;cursor:pointer">Daxil ol</button>
+        <button onclick="gpsDisconnect()" style="font:inherit;font-size:12px;color:var(--mut);background:transparent;border:1px solid #d6deea;border-radius:9px;padding:8px 14px;cursor:pointer">Yadda saxla olmadan keç</button>
       </div>
-      <div class="kpi kpi-b">
-        <div class="lab">Aktiv Avtomobil</div>
-        <div class="big num" id="gpsActive">—</div>
-        <div class="delta" style="color:var(--mut)">km > 0 olan</div>
-      </div>
-      <div class="kpi kpi-p">
-        <div class="lab">Cəmi Sürüş Vaxtı</div>
-        <div class="big num" id="gpsTimeTotal">—</div>
-        <div class="delta" style="color:var(--mut)">bu gün</div>
-      </div>
+      <div id="gpsLoginErr" style="font-size:12px;color:var(--red);margin-top:8px;display:none"></div>
     </div>
-    <div class="panel" style="overflow-x:auto">
-      <table class="atbl" id="gpsTbl">
-        <thead><tr>
-          <th>Avtomobil</th>
-          <th>Məsafə (km)</th>
-          <th>Paylanma</th>
-          <th>Sürüş vaxtı</th>
-          <th>Boş dayanma</th>
-          <th>Bal</th>
-        </tr></thead>
-        <tbody id="gpsTblBody"></tbody>
-      </table>
-    </div>
-    <div class="hint" style="margin-top:10px">
-      Məlumat mənbəyi: Geekbro Fleet Tracking &middot; "Boş dayanma" son davamlı dayanma müddətidir.
+
+    <!-- Main GPS content -->
+    <div id="gpsMain">
+      <!-- Interval + refresh bar -->
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px">
+        <div class="seg" id="gpsSeg">
+          <button class="on" data-p="today">Bu gün</button>
+          <button data-p="week">Bu həftə</button>
+          <button data-p="lastweek">Ötən həftə</button>
+          <button data-p="month">Bu ay</button>
+        </div>
+        <button id="gpsRefreshBtn" onclick="fetchGpsData()" style="font:inherit;font-size:12px;font-weight:700;background:transparent;border:1px solid #d6deea;border-radius:9px;padding:6px 14px;cursor:pointer;color:var(--mut)">↻ Yenilə</button>
+        <span id="gpsConnectInfo" style="font-size:12px;color:var(--mut)"></span>
+      </div>
+
+      <!-- KPI: only Active -->
+      <div style="display:grid;grid-template-columns:repeat(2,auto) 1fr;gap:12px;margin-bottom:18px">
+        <div class="kpi kpi-b" style="min-width:140px">
+          <div class="lab">Aktiv Avtomobil</div>
+          <div class="big num" id="gpsActive">—</div>
+          <div class="delta" style="color:var(--mut)">km &gt; 0 olan</div>
+        </div>
+        <div class="kpi kpi-t" style="min-width:160px">
+          <div class="lab">Ən çox sürən</div>
+          <div class="big" id="gpsTop" style="font-size:16px">—</div>
+          <div class="delta num" id="gpsTopKm" style="color:var(--teal)"></div>
+        </div>
+        <div></div>
+      </div>
+
+      <!-- Table -->
+      <div class="panel" style="overflow-x:auto;padding:0">
+        <table class="atbl" style="margin:0">
+          <thead><tr>
+            <th style="padding:12px 16px">Avtomobil</th>
+            <th>Məsafə (km)</th>
+            <th style="min-width:160px">Paylanma</th>
+            <th>Sürüş vaxtı</th>
+            <th>Boş dayanma</th>
+          </tr></thead>
+          <tbody id="gpsTblBody"></tbody>
+        </table>
+      </div>
+      <div class="hint" style="margin-top:10px" id="gpsNote">Məlumat mənbəyi: Geekbro Fleet Tracking</div>
     </div>
   </section>
 
@@ -675,58 +705,200 @@ function renderAvto(){
 }
 
 // ============ GPS ============
-let gpsData = [
-  {p:"77-UZ-539", km:190.68, driveMin:272, idleMin:20, score:683},
-  {p:"77-SP-437", km:102.73, driveMin:215, idleMin:7,  score:14},
-  {p:"77-UZ-842", km:60.98,  driveMin:132, idleMin:3,  score:187},
-  {p:"77-UD-140", km:28.02,  driveMin:49,  idleMin:1,  score:254},
-  {p:"77-UD-304", km:14.27,  driveMin:42,  idleMin:9,  score:41},
-  {p:"77-BG-699", km:0.00,   driveMin:0,   idleMin:2,  score:9},
-];
-let gpsUpdatedAt = '17.06.2026';
+const GB_API   = 'https://app.geekbro.ai/be-service/drivers';
+const GB_LOGIN = 'https://app.geekbro.ai/be-service/auth/login';
+const GB_CID   = 'f5004d86-5e84-4800-aef1-be710480576a';
+
+let gpsToken   = localStorage.getItem('gbToken') || null;
+let gpsPeriod  = 'today';
+let gpsFetching = false;
 
 function fmtMin(m){
   if(!m && m!==0) return '—';
+  m = Math.round(m);
   const h=Math.floor(m/60), d=m%60;
   return h>0 ? h+'s. '+d+'d.' : d+'d.';
 }
 
-function renderGPS(){
-  const sorted = [...gpsData].sort((a,b)=>b.km-a.km);
-  const totalKm = gpsData.reduce((s,g)=>s+g.km,0);
-  const totalMin = gpsData.reduce((s,g)=>s+g.driveMin,0);
-  const active = gpsData.filter(g=>g.km>0).length;
+function gpsDateRange(p){
+  const n=new Date();
+  const d0=(d,h=0,mi=0,s=0)=>{const x=new Date(d);x.setHours(h,mi,s,0);return x.toISOString();};
+  if(p==='today'){
+    return {startDate:d0(n,0,0,0), endDate:d0(n,23,59,59)};
+  }
+  if(p==='week'){
+    const mon=new Date(n); mon.setDate(n.getDate()-((n.getDay()||7)-1));
+    return {startDate:d0(mon,0,0,0), endDate:d0(n,23,59,59)};
+  }
+  if(p==='lastweek'){
+    const sun=new Date(n); sun.setDate(n.getDate()-((n.getDay()||7)));
+    const mon=new Date(sun); mon.setDate(sun.getDate()-6);
+    return {startDate:d0(mon,0,0,0), endDate:d0(sun,23,59,59)};
+  }
+  if(p==='month'){
+    const s=new Date(n.getFullYear(),n.getMonth(),1);
+    return {startDate:d0(s,0,0,0), endDate:d0(n,23,59,59)};
+  }
+}
 
-  document.getElementById('gpsKmTotal').innerHTML = totalKm.toFixed(1)+'<small> km</small>';
-  document.getElementById('gpsActive').innerHTML = active+'<small>/'+gpsData.length+'</small>';
-  document.getElementById('gpsTimeTotal').textContent = fmtMin(totalMin);
-  document.getElementById('gpsUpdated').textContent = 'Son yenilənmə: '+gpsUpdatedAt;
+function setGpsStatus(txt, col='var(--mut)'){
+  const el=document.getElementById('gpsStatus');
+  if(el){el.textContent=txt;el.style.color=col;}
+}
 
-  let h = '';
-  sorted.forEach(g=>{
-    const pct = totalKm>0 ? (g.km/totalKm*100) : 0;
-    const col = g.km>=100?'var(--teal)':g.km>=50?'var(--blue)':g.km>0?'var(--amber)':'var(--red)';
-    const scoreCls = g.score>=100?'b-ok':g.score>=20?'b-warn':'b-crit';
-    const [a,b,c] = g.p.split('-');
-    h += `<tr>
-      <td><span class="plate"><span class="az"><small>AZ</small></span><span class="pn">${a} ${b} ${c}</span></span></td>
-      <td class="num" style="font-size:17px;font-weight:800;color:${col}">${g.km.toFixed(2)}</td>
-      <td style="min-width:120px">
+function gpsShowLogin(){ document.getElementById('gpsLoginBox').style.display=''; }
+function gpsHideLogin(){ document.getElementById('gpsLoginBox').style.display='none'; }
+
+function gpsDisconnect(){
+  gpsToken=null; localStorage.removeItem('gbToken');
+  gpsHideLogin();
+  document.getElementById('gpsConnectInfo').textContent='Bağlı deyil — demo məlumat göstərilir';
+  renderGpsStatic();
+}
+
+async function gpsLogin(){
+  const user=(document.getElementById('gpsUser').value||'').trim();
+  const pass=(document.getElementById('gpsPass').value||'').trim();
+  const errEl=document.getElementById('gpsLoginErr');
+  const btn=document.getElementById('gpsLoginBtn');
+  if(!user||!pass){errEl.textContent='İstifadəçi adı və şifrə daxil edin.';errEl.style.display='';return;}
+  btn.textContent='Gözləyin...'; btn.disabled=true; errEl.style.display='none';
+  try{
+    const r=await fetch(GB_LOGIN,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({userName:user, password:pass})
+    });
+    const txt=await r.text();
+    if(!r.ok) throw new Error('Giriş uğursuz ('+r.status+'). İstifadəçi adı/şifrəni yoxlayın.');
+    let data; try{data=JSON.parse(txt);}catch{throw new Error('API cavabı JSON deyil');}
+    gpsToken=data.token||data.accessToken||data.access_token||data.jwt||null;
+    if(!gpsToken) throw new Error('Token tapılmadı: '+Object.keys(data).join(', '));
+    localStorage.setItem('gbToken', gpsToken);
+    gpsHideLogin();
+    document.getElementById('gpsConnectInfo').textContent='● Bağlı: '+user;
+    await fetchGpsData();
+  } catch(e){
+    errEl.textContent=e.message; errEl.style.display='';
+  } finally{
+    btn.textContent='Daxil ol'; btn.disabled=false;
+  }
+}
+
+async function fetchGpsData(){
+  if(gpsFetching) return;
+  if(!gpsToken){ gpsShowLogin(); renderGpsStatic(); return; }
+  gpsFetching=true;
+  setGpsStatus('● Yüklənir…','#A9BCD8');
+  document.getElementById('gpsRefreshBtn').textContent='↻ …';
+  try{
+    const range=gpsDateRange(gpsPeriod);
+    const r=await fetch(`${GB_API}?companyId=${GB_CID}&direction=ASC&page=0&size=100&sort=`,{
+      method:'POST',
+      headers:{'Authorization':`Bearer ${gpsToken}`,'Content-Type':'application/json'},
+      body:JSON.stringify(range)
+    });
+    if(r.status===401||r.status===403){
+      gpsToken=null; localStorage.removeItem('gbToken');
+      gpsShowLogin();
+      throw new Error('Token etibarsızdır — yenidən daxil olun');
+    }
+    if(!r.ok) throw new Error('API xətası: '+r.status);
+    const data=await r.json();
+    renderGpsData(data.content||[]);
+    const now=new Date();
+    const pad=n=>n.toString().padStart(2,'0');
+    setGpsStatus('Son yenilənmə: '+pad(now.getHours())+':'+pad(now.getMinutes())+':'+pad(now.getSeconds()),'var(--teal)');
+    document.getElementById('gpsNote').textContent=
+      'Məlumat: Geekbro Fleet Tracking · '+
+      {today:'Bu gün',week:'Bu həftə',lastweek:'Ötən həftə',month:'Bu ay'}[gpsPeriod];
+  } catch(e){
+    setGpsStatus('Xəta: '+e.message,'var(--red)');
+    if(!gpsToken) renderGpsStatic();
+  } finally{
+    gpsFetching=false;
+    document.getElementById('gpsRefreshBtn').textContent='↻ Yenilə';
+  }
+}
+
+function renderGpsData(drivers){
+  const totalKm=drivers.reduce((s,d)=>s+(d.dailyKm||0),0);
+  const active=drivers.filter(d=>(d.dailyKm||0)>0).length;
+  document.getElementById('gpsActive').innerHTML=active+'<small>/'+drivers.length+'</small>';
+  const top=drivers.reduce((a,b)=>(b.dailyKm||0)>(a.dailyKm||0)?b:a, drivers[0]||{});
+  document.getElementById('gpsTop').textContent=top?.vehicle?.plateNumber||top?.firstName||'—';
+  document.getElementById('gpsTopKm').textContent=(top?.dailyKm||0).toFixed(2)+' km';
+  const sorted=[...drivers].sort((a,b)=>(b.dailyKm||0)-(a.dailyKm||0));
+  let h='';
+  sorted.forEach(d=>{
+    const km=d.dailyKm||0;
+    const pct=totalKm>0?(km/totalKm*100):0;
+    const plate=d.vehicle?.plateNumber||d.firstName||'—';
+    const driveMin=d.dailyH||0;
+    const idleMin=Math.round(d.idling||0);
+    const col=km>=100?'var(--teal)':km>=50?'var(--blue)':km>0?'var(--amber)':'var(--red)';
+    h+=`<tr>
+      <td style="padding:10px 16px"><span class="plate"><span class="az"><small>AZ</small></span><span class="pn">${plate}</span></span></td>
+      <td class="num" style="font-size:17px;font-weight:800;color:${col};transition:color .5s">${km.toFixed(2)}</td>
+      <td style="min-width:160px;padding:10px 12px">
         <div style="height:8px;background:#eef1f6;border-radius:6px;overflow:hidden;margin-bottom:3px">
-          <div style="width:${pct.toFixed(1)}%;height:100%;background:${col};border-radius:6px;transition:width .4s"></div>
+          <div style="width:0%;height:100%;background:${col};border-radius:6px;transition:width .7s ease" data-w="${pct.toFixed(1)}"></div>
         </div>
         <div style="font-size:11px;color:var(--mut)">${pct.toFixed(0)}%</div>
       </td>
-      <td class="num" style="font-weight:700">${fmtMin(g.driveMin)}</td>
-      <td class="num" style="color:var(--mut)">${fmtMin(g.idleMin)}</td>
-      <td><span class="badge ${scoreCls}">${g.score}</span></td>
+      <td class="num" style="font-weight:700">${fmtMin(driveMin)}</td>
+      <td class="num" style="color:var(--mut)">${fmtMin(idleMin)}</td>
     </tr>`;
   });
-  document.getElementById('gpsTblBody').innerHTML = h;
+  document.getElementById('gpsTblBody').innerHTML=h;
+  // Smooth bar animation — trigger after paint
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    document.querySelectorAll('#gpsTblBody [data-w]').forEach(el=>{
+      el.style.width=el.dataset.w+'%';
+    });
+  }));
 }
 
+function renderGpsStatic(){
+  // Fallback static data while not connected
+  const staticDrivers=[
+    {vehicle:{plateNumber:'77UZ539'},dailyKm:190.68,dailyH:272,idling:20},
+    {vehicle:{plateNumber:'77SP437'},dailyKm:102.73,dailyH:215,idling:7},
+    {vehicle:{plateNumber:'77UZ842'},dailyKm:60.98, dailyH:132,idling:3},
+    {vehicle:{plateNumber:'77UD140'},dailyKm:28.02, dailyH:49, idling:1},
+    {vehicle:{plateNumber:'77UD304'},dailyKm:14.27, dailyH:42, idling:9},
+    {vehicle:{plateNumber:'77BG699'},dailyKm:0,     dailyH:0,  idling:2},
+  ];
+  renderGpsData(staticDrivers);
+  document.getElementById('gpsNote').textContent='Demo məlumat · Canlı data üçün Geekbro-ya daxil olun';
+}
+
+// Interval segment click
+document.getElementById('gpsSeg').addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b) return;
+  document.querySelectorAll('#gpsSeg button').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on');
+  gpsPeriod=b.dataset.p;
+  fetchGpsData();
+});
+
+// Auto-fetch when GPS tab becomes active
+const _origSwitchTabForGps = typeof switchTab === 'function' ? switchTab : null;
+
+// Init GPS on page load
+(function initGPS(){
+  if(gpsToken){
+    gpsHideLogin();
+    document.getElementById('gpsConnectInfo').textContent='● Bağlı';
+  } else {
+    gpsShowLogin();
+  }
+  renderGpsStatic(); // show immediately, then fetch
+  if(gpsToken) fetchGpsData();
+})();
+
 // ============ RENDER ALL ============
-function renderAll(){ updateKpis(); renderAlerts(); draw(curK); renderCars(curOwner); renderDaily(); renderAvto(); renderGPS(); }
+function renderAll(){ updateKpis(); renderAlerts(); draw(curK); renderCars(curOwner); renderDaily(); renderAvto(); }
 
 // tab keçidi — həm üst, həm alt nav sinxron
 function switchTab(v){
@@ -739,6 +911,7 @@ function switchTab(v){
   document.querySelectorAll('.view').forEach(s=>s.classList.remove('on'));
   const view=document.getElementById('v-'+v);
   if(view) view.classList.add('on');
+  if(v==='gps') fetchGpsData();
 }
 document.getElementById('tabs').addEventListener('click',e=>{
   const b=e.target.closest('button');if(!b)return;
