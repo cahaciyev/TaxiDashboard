@@ -170,9 +170,10 @@
   .pn-sm{font-family:'JetBrains Mono',monospace;font-weight:700}
   footer{margin:34px 0 30px;text-align:center;color:var(--mut);font-size:12px}
 
-  /* ── CƏRİMƏ SİSTEMİ ── */
+  /* ── CƏRIMƏ SİSTEMİ ── */
   .fine-badge{display:inline-flex;align-items:center;gap:5px;border-radius:20px;
-    padding:4px 9px;font-size:11px;font-weight:700;cursor:pointer;margin-top:8px;transition:all .2s}
+    padding:4px 9px;font-size:11px;font-weight:700;cursor:pointer;margin-top:8px;
+    transition:all .2s}
   .fine-badge.none{background:#dff3ee;color:#0c6b5d}
   .fine-badge.low{background:#fdeccd;color:#9a6610}
   .fine-badge.high{background:#fbe3e0;color:#a8362d;animation:fpulse 2s ease-in-out infinite}
@@ -213,17 +214,25 @@
   .fine-sum{text-align:center;padding:14px 0 4px;font-size:13px;color:var(--mut);border-top:1px solid #eef1f6;margin-top:4px}
   .fine-empty{text-align:center;padding:36px 0;color:var(--mut);font-size:14px}
 
-  /* Notification */
-  .fine-notif{position:fixed;top:-120px;left:50%;transform:translateX(-50%);z-index:600;
-    background:var(--red);color:#fff;padding:14px 16px;border-radius:16px;
-    box-shadow:0 8px 32px rgba(0,0,0,.35);min-width:260px;
-    max-width:360px;width:calc(100% - 28px);display:flex;gap:12px;align-items:flex-start}
-  .fine-notif.show{top:14px}
-  .fn-ico{font-size:22px;flex:0 0 auto;line-height:1;margin-top:1px}
+  /* Notification — telefon stili */
+  .fine-notif{position:fixed;top:-180px;left:50%;transform:translateX(-50%);z-index:999;
+    background:rgba(16,16,20,.94);backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);
+    color:#fff;padding:10px 12px 10px 10px;border-radius:22px;
+    box-shadow:0 16px 56px rgba(0,0,0,.65),0 0 0 .5px rgba(255,255,255,.10);
+    transition:top .55s cubic-bezier(.175,.885,.32,1.1);
+    max-width:400px;width:calc(100% - 20px);display:flex;gap:10px;align-items:center}
+  .fine-notif.show{top:10px}
+  .fn-ico{width:44px;height:44px;border-radius:13px;background:linear-gradient(135deg,#e03530,#c02020);
+    display:flex;align-items:center;justify-content:center;font-size:24px;flex:0 0 auto;
+    box-shadow:0 4px 12px rgba(192,32,32,.4)}
   .fn-body{flex:1;min-width:0}
-  .fn-title{font-weight:800;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .fn-sub{font-size:12px;opacity:.9;margin-top:3px;line-height:1.4}
-  .fn-cls{opacity:.6;cursor:pointer;font-size:20px;line-height:1;padding:0 0 0 4px;flex:0 0 auto;border:0;background:none;color:#fff}
+  .fn-app{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+    opacity:.5;margin-bottom:2px}
+  .fn-title{font-weight:700;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:.85}
+  .fn-sub{font-size:14px;font-weight:800;margin-top:1px;line-height:1.3;color:#fff}
+  .fn-cls{opacity:.4;cursor:pointer;font-size:22px;line-height:1;padding:4px;flex:0 0 auto;
+    border:0;background:none;color:#fff;border-radius:50%;transition:opacity .15s}
+  .fn-cls:hover{opacity:.8}
 
   @media(max-width:1060px){.kpis{grid-template-columns:repeat(3,1fr)}}
   @media(max-width:920px){.kpis{grid-template-columns:repeat(3,1fr)}.grid2{grid-template-columns:1fr}.vgrid{grid-template-columns:1fr 1fr}}
@@ -232,42 +241,60 @@
     .kpi .big{font-size:20px}
     .vgrid{grid-template-columns:1fr 1fr}
     .atbl thead{display:none}
+    /* header compact */
     .head-in{padding:12px 0 8px;gap:10px}
     .brand .eyebrow{font-size:10px;letter-spacing:.1em}
     .brand h1{font-size:18px;margin-top:2px}
     .brand .sub{font-size:11px;gap:4px;margin-top:3px;flex-wrap:nowrap;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    /* GPS period seg — wrap to 2 rows */
     #gpsSeg{display:grid;grid-template-columns:1fr 1fr;gap:4px;background:transparent;padding:0;border-radius:0}
     #gpsSeg button{border-radius:8px;background:#E7ECF4;color:var(--mut);font-size:12px;padding:8px 6px;text-align:center}
     #gpsSeg button.on{background:var(--deck);color:#fff}
+    /* GPS KPI: 3 cards full width */
     .gps-kpi-row{grid-template-columns:1fr 1fr 1fr!important;gap:8px!important}
     .gps-kpi-row .kpi{min-width:0!important}
     .gps-kpi-row .kpi .big{font-size:13px!important}
     .gps-kpi-row .kpi:last-child{display:none}
     .gps-kpi-row .kpi .lab{font-size:10px}
+    /* GPS refresh row */
+    #v-gps>div#gpsMain>div:first-child{flex-wrap:wrap;gap:8px}
+    /* GPS table — hide less important columns on mobile */
     #gpsTblBody tr td:nth-child(3),#gpsTblBody tr td:nth-child(4),#gpsTblBody tr td:nth-child(5),
     #v-gps .atbl thead th:nth-child(3),#v-gps .atbl thead th:nth-child(4),#v-gps .atbl thead th:nth-child(5){display:none}
+    /* Vehicle cards tighter */
     .vcard{padding:12px}
     .plate .pn{font-size:12px;padding:5px 7px}
+    /* Alerts tighter */
     .alert{padding:9px 10px}
+    /* Panel padding */
     .panel{padding:14px}
+    /* wrap horizontal padding */
     .wrap{padding-left:12px;padding-right:12px}
+    /* header sub text */
+    .brand .sub{font-size:12px;gap:5px}
   }
   @media(max-width:420px){
     .kpis{grid-template-columns:repeat(2,1fr);gap:8px}
     .kpi{padding:12px 10px}
     .kpi .big{font-size:18px}
     .vgrid{grid-template-columns:1fr}
+    /* header ultra compact */
     .brand .eyebrow{display:none}
     .head-in{padding:8px 0 6px}
     .brand h1{font-size:16px;margin-top:0}
     .brand .sub{font-size:11px;margin-top:2px}
+    /* GPS period seg stays 2-col grid */
     #gpsSeg button{font-size:11px;padding:7px 4px}
+    /* GPS KPI stack 3 in a row but very compact */
     #v-gps .kpi .big{font-size:12px!important}
     #v-gps .kpi .delta{font-size:10px}
+    /* Chip cards in header */
     .chip{padding:7px 10px;min-width:80px}
     .chip .v{font-size:16px}
+    /* Filters wrap nicely */
     .filters{gap:6px}
     .fbtn{padding:6px 12px;font-size:12px}
+    /* Section header */
     .sec-h h2{font-size:15px}
     .panel{padding:12px}
     .wrap{padding-left:10px;padding-right:10px}
@@ -345,7 +372,7 @@
   </div>
 </header>
 
-<!-- CƏRİMƏ MODAL -->
+<!-- CƏRIMƏ MODAL -->
 <div class="fine-ov" id="fineOv" onclick="if(event.target===this)closeFineModal()">
   <div class="fine-sheet">
     <div class="fine-sh">
@@ -355,15 +382,18 @@
     <div class="fine-body" id="fineShBody"><div class="fine-empty">Yüklənir…</div></div>
   </div>
 </div>
+
 <!-- YENİ CƏRİMƏ BİLDİRİŞ -->
 <div class="fine-notif" id="fineNotif">
   <div class="fn-ico">🚨</div>
   <div class="fn-body">
+    <div class="fn-app">Avtopark · Cərimə</div>
     <div class="fn-title" id="fineNotifTitle"></div>
     <div class="fn-sub" id="fineNotifSub"></div>
   </div>
   <button class="fn-cls" onclick="document.getElementById('fineNotif').classList.remove('show')">✕</button>
 </div>
+
 <!-- MOBİL ALT NAVİQASİYA -->
 <nav class="mob-nav" id="mobNav">
   <button class="mnb on" data-v="ov">
@@ -690,13 +720,18 @@ function alertHTML(a){
     <div class="body"><div class="t">${a.t}</div><div class="d">${a.p}${a.d?' · '+a.d:''}</div></div>
     <div class="when">${a.when}</div></div>`;
 }
+let alertsLastSeenCount = -1; // -1 = heç baxılmayıb
 function renderAlerts(){
   const all=buildAlerts();
   const crit=all.filter(a=>a.sev==='crit');
   document.getElementById('kCrit').textContent=crit.length;
-  // mobil badge
+  // mobil badge — yalnız istifadəçi son görüşündən fərqli sayda varsa göstər
   const mb=document.getElementById('mobBadge');
-  if(mb){mb.textContent=crit.length||'';mb.style.display=crit.length?'flex':'none';}
+  if(mb){
+    const hasNew=crit.length>0&&crit.length!==alertsLastSeenCount;
+    mb.textContent=crit.length||'';
+    mb.style.display=hasNew?'flex':'none';
+  }
   // banner
   const b=document.getElementById('banner');
   if(crit.length){
@@ -1067,6 +1102,11 @@ function switchTab(v){
   const view=document.getElementById('v-'+v);
   if(view) view.classList.add('on');
   if(v==='gps') fetchGpsData();
+  if(v==='avto'){
+    alertsLastSeenCount=buildAlerts().filter(a=>a.sev==='crit').length;
+    const mb=document.getElementById('mobBadge');
+    if(mb){mb.style.display='none';}
+  }
 }
 document.getElementById('tabs').addEventListener('click',e=>{
   const b=e.target.closest('button');if(!b)return;
@@ -1237,6 +1277,10 @@ async function loadLive(){
   }
 }
 
+document.getElementById('refresh').addEventListener('click', loadLive);
+setInterval(loadLive, AUTO_MS);
+loadLive();
+
 // ── CƏRİMƏ API ──
 const WORKER_BASE = 'https://noisy-voice-468f.cahaciyev.workers.dev';
 const fineCache   = {};
@@ -1252,8 +1296,8 @@ function isQarali(p){ return (p.text||'').toLowerCase().includes('qərarlı'); }
 
 async function fetchCarFines(plate){
   const num  = carNumForAPI(plate);
-  const resp = await fetch(WORKER_BASE+'/fines?car='+encodeURIComponent(num));
-  if(!resp.ok) throw new Error('HTTP '+resp.status);
+  const resp = await fetch(`${WORKER_BASE}/fines?car=${encodeURIComponent(num)}`);
+  if(!resp.ok) throw new Error(`HTTP ${resp.status}`);
   const data = await resp.json();
   return Array.isArray(data) ? data : (data.protocols||data.data||[]);
 }
@@ -1266,16 +1310,16 @@ function renderFineBadge(plate, protocols){
   if(!count){
     el.className='fine-badge none'; el.innerHTML='✔ Cərimə yoxdur';
   } else if(total>300){
-    el.className='fine-badge high'; el.innerHTML='🚨 '+count+' cərimə · '+total.toFixed(0)+' ₼';
+    el.className='fine-badge high'; el.innerHTML=`🚨 ${count} cərimə · ${total.toFixed(0)} ₼`;
   } else {
-    el.className='fine-badge low';  el.innerHTML='⚠ '+count+' cərimə · '+total.toFixed(0)+' ₼';
+    el.className='fine-badge low';  el.innerHTML=`⚠ ${count} cərimə · ${total.toFixed(0)} ₼`;
   }
 }
 
 function playFineSound(){
   try{
     const ctx=new (window.AudioContext||window.webkitAudioContext)();
-    [880,1100,1320].forEach(function(hz,i){
+    [880,1100,1320].forEach((hz,i)=>{
       const osc=ctx.createOscillator(), g=ctx.createGain();
       osc.connect(g); g.connect(ctx.destination);
       osc.frequency.value=hz; osc.type='sine';
@@ -1293,31 +1337,29 @@ function showFineNotification(plate,proto){
   const t=document.getElementById('fineNotifTitle');
   const s=document.getElementById('fineNotifSub');
   if(!el||!t||!s) return;
-  const parts=plate.split('-');
-  t.textContent=parts.join(' ')+' — Yeni cərimə!';
-  s.textContent=(proto.text||'')+' · '+(proto.total||proto.amount||0)+' ₼';
+  const[a,b,d]=plate.split('-');
+  t.textContent=`${a} ${b} ${d} — Yeni cərimə!`;
+  s.textContent=`${proto.text||''} · ${proto.total||proto.amount||0} ₼`;
   el.classList.add('show');
   playFineSound();
-  setTimeout(function(){el.classList.remove('show');},6000);
+  setTimeout(()=>el.classList.remove('show'),6000);
 }
 
 async function loadAllFines(){
-  const plates=(cars||[]).map(function(c){return c.p;}).filter(Boolean);
-  for(var i=0;i<plates.length;i++){
-    var plate=plates[i];
+  const plates=(cars||[]).map(c=>c.p).filter(Boolean);
+  for(const plate of plates){
     try{
-      var protocols=await fetchCarFines(plate);
-      var prev=fineCache[plate];
+      const protocols=await fetchCarFines(plate);
+      const prev=fineCache[plate];
       if(prev){
-        var oldIds=fineSeenIds[plate]||new Set();
-        for(var j=0;j<protocols.length;j++){
-          var p=protocols[j];
-          var pid=p.protocol_number||p.id||JSON.stringify(p);
+        const oldIds=fineSeenIds[plate]||new Set();
+        for(const p of protocols){
+          const pid=p.protocol_number||p.id||JSON.stringify(p);
           if(!oldIds.has(pid)){ showFineNotification(plate,p); break; }
         }
       }
-      fineSeenIds[plate]=new Set(protocols.map(function(p){return p.protocol_number||p.id||JSON.stringify(p);}));
-      fineCache[plate]={protocols:protocols,total:fineTotalAmount(protocols),ts:Date.now()};
+      fineSeenIds[plate]=new Set(protocols.map(p=>p.protocol_number||p.id||JSON.stringify(p)));
+      fineCache[plate]={protocols,total:fineTotalAmount(protocols),ts:Date.now()};
       renderFineBadge(plate,protocols);
     }catch(e){ console.warn('Fine xəta:',plate,e.message); }
   }
@@ -1328,139 +1370,208 @@ function renderFineSheet(plate,body,protocols){
     body.innerHTML='<div class="fine-empty">✔ Bu avtomobil üzrə cərimə yoxdur</div>';
     return;
   }
-  var total=fineTotalAmount(protocols);
-  body.innerHTML=protocols.map(function(p){
-    var q=isQarali(p);
-    var amt=p.amount||0, dis=p.discount||0, fin=p.total||amt;
-    return '<div class="fine-item'+(q?' qarali':'')+'">'+
-      '<div class="fine-stag">'+(p.protocol_series||'')+(p.protocol_number||'')+'</div>'+
-      '<div class="fine-text">'+(p.text||'—')+'</div>'+
-      (p.fullname?'<div class="fine-driver">'+p.fullname+'</div>':'')+
-      '<div class="fine-amts">'+
-        '<span>Cərimə: <b>'+amt+' ₼</b></span>'+
-        (dis?'<span>Endirim: <b>-'+dis+' ₼</b></span>':'')+
-        '<span class="fine-final">Yekun: <b>'+fin+' ₼</b></span>'+
-      '</div></div>';
-  }).join('')+'<div style="padding:14px 18px;font-weight:700;font-size:15px;border-top:1px solid #eee;color:'+(total>300?'#a8362d':'#0c6b5d')+'">Cəmi: '+total.toFixed(0)+' ₼</div>';
+  const total=fineTotalAmount(protocols);
+  body.innerHTML=protocols.map(p=>{
+    const q=isQarali(p);
+    const amt=p.amount||0, dis=p.discount||0, fin=p.total||amt;
+    return `<div class="fine-item${q?' qarali':''}">
+      <div class="fine-stag">${p.protocol_series||''}${p.protocol_number||''}</div>
+      <div class="fine-text">${p.text||'—'}</div>
+      ${p.fullname?`<div class="fine-driver">${p.fullname}</div>`:''}
+      <div class="fine-amts">
+        <span>Cərimə: <b>${amt} ₼</b></span>
+        ${dis?`<span>Endirim: <b>-${dis} ₼</b></span>`:''}
+        <span class="fine-final">Yekun: <b>${fin} ₼</b></span>
+      </div></div>`;
+  }).join('')+`<div class="fine-total${total>300?' red':''}" style="padding:14px 18px;font-weight:700;font-size:15px;border-top:1px solid #eee;color:${total>300?'#a8362d':'#0c6b5d'}">Cəmi: ${total.toFixed(0)} ₼</div>`;
 }
 
 function openFineModal(plate){
-  var ov=document.getElementById('fineOv');
-  var title=document.getElementById('fineShTitle');
-  var body=document.getElementById('fineShBody');
+  const ov=document.getElementById('fineOv');
+  const title=document.getElementById('fineShTitle');
+  const body=document.getElementById('fineShBody');
   if(!ov||!title||!body) return;
-  var parts=plate.split('-');
-  title.textContent=parts.join(' ')+' — Cərimələr';
-  var cached=fineCache[plate];
+  const[a,b,d]=plate.split('-');
+  title.textContent=`${a} ${b} ${d} — Cərimələr`;
+  const cached=fineCache[plate];
   if(!cached){
     body.innerHTML='<div class="fine-empty">Yüklənir…</div>';
-    fetchCarFines(plate).then(function(protocols){
-      fineCache[plate]={protocols:protocols,total:fineTotalAmount(protocols),ts:Date.now()};
+    fetchCarFines(plate).then(protocols=>{
+      fineCache[plate]={protocols,total:fineTotalAmount(protocols),ts:Date.now()};
       renderFineSheet(plate,body,protocols);
-    }).catch(function(e){ body.innerHTML='<div class="fine-empty">Xəta: '+e.message+'</div>'; });
+    }).catch(e=>{ body.innerHTML=`<div class="fine-empty">Xəta: ${e.message}</div>`; });
   } else {
     renderFineSheet(plate,body,cached.protocols);
   }
   ov.classList.add('open');
 }
 
-function closeFineModal(){ var el=document.getElementById('fineOv'); if(el) el.classList.remove('open'); }
+function closeFineModal(){ document.getElementById('fineOv')?.classList.remove('open'); }
 
 setInterval(loadAllFines, 5*60*1000);
 
-document.getElementById('refresh').addEventListener('click', loadLive);
-setInterval(loadLive, AUTO_MS);
-loadLive();
+// AudioContext-i ilk toxunuşda/klikdə aç (mobil brauzerlər tələb edir)
+let _audioUnlocked = false;
+function _unlockAudio(){
+  if(_audioUnlocked) return;
+  try{
+    const ctx=new(window.AudioContext||window.webkitAudioContext)();
+    const b=ctx.createBuffer(1,1,22050);
+    const s=ctx.createBufferSource();
+    s.buffer=b; s.connect(ctx.destination); s.start(0);
+    ctx.resume(); _audioUnlocked=true;
+  }catch(e){}
+}
+document.addEventListener('touchstart',_unlockAudio,{once:true,passive:true});
+document.addEventListener('click',_unlockAudio,{once:true,passive:true});
 
 // ── 3D ROAD CANVAS HEADER ──
 (function(){
-  const scene=document.querySelector('.hdr-scene');
-  if(!scene)return;
-  const cv=document.createElement('canvas');
+  const scene = document.querySelector('.hdr-scene');
+  if (!scene) return;
+  const cv = document.createElement('canvas');
   scene.appendChild(cv);
-  const cx=cv.getContext('2d');
-  let W=0,H=0,t=0;
-  function resize(){W=cv.width=scene.offsetWidth;H=cv.height=scene.offsetHeight;}
-  function p3(x,z){const f=.58,vx=W*.5,vy=H*.34,s=f/(f+z);return{x:vx+x*W*.48*s,y:vy+(H-vy)*(1-s),s};}
+  const cx = cv.getContext('2d');
+  let W=0, H=0, t=0;
+
+  function resize(){
+    W = cv.width = scene.offsetWidth;
+    H = cv.height = scene.offsetHeight;
+  }
+
+  // Perspective projection: x(-1..1)=road half-width, z(0=near..1=far)
+  function p3(x, z){
+    const f=0.58, vx=W*0.5, vy=H*0.34, s=f/(f+z);
+    return {x: vx+x*W*0.48*s, y: vy+(H-vy)*(1-s), s};
+  }
+
+  // Side bokeh lights (city lights flying past)
   const COLS=['#F5C518','#2D6CDF','#1E9E8F','#FF6B35','#E8E8FF'];
   function mkL(){return{sd:Math.random()>.5?1:-1,rx:1.3+Math.random()*2.5,z:Math.random(),col:COLS[~~(Math.random()*5)],r:3+Math.random()*4,sp:.45+Math.random()*.7};}
   const lights=Array.from({length:24},mkL);
+
+  // Cars in distance (red tail-light pairs)
   const cars=[{z:.78,sp:.0045},{z:.54,sp:.006},{z:.63,sp:.005}];
-  const ND=16,DSP=.72;
+
+  // Center dashes
+  const ND=16, DSP=0.72;
+
   function draw(){
     if(document.hidden||!W){requestAnimationFrame(draw);return;}
     cx.clearRect(0,0,W,H);
-    const VX=W*.5,VY=H*.34;
+    const VX=W*.5, VY=H*.34;
+
+    // Sky
     const sg=cx.createLinearGradient(0,0,0,VY+H*.1);
-    sg.addColorStop(0,'#010509');sg.addColorStop(.65,'#081120');sg.addColorStop(1,'#0d1a30');
-    cx.fillStyle=sg;cx.fillRect(0,0,W,VY+H*.1);
-    [[VX*.25,'#1a4db0',.22,220],[VX,'#b88a0c',.13,165],[VX*1.75,'#0c7060',.17,190]].forEach(([hx,c,a,r])=>{
-      const g=cx.createRadialGradient(hx,VY,0,hx,VY,r);
-      g.addColorStop(0,c+(~~(a*255)).toString(16).padStart(2,'0'));g.addColorStop(1,'transparent');
-      cx.fillStyle=g;cx.fillRect(0,0,W,VY+90);
-    });
+    sg.addColorStop(0,'#010509'); sg.addColorStop(.65,'#081120'); sg.addColorStop(1,'#0d1a30');
+    cx.fillStyle=sg; cx.fillRect(0,0,W,VY+H*.1);
+
+    // Horizon city glow
+    [[VX*.25,'#1a4db0',.22,220],[VX,'#b88a0c',.13,165],[VX*1.75,'#0c7060',.17,190]]
+      .forEach(([hx,c,a,r])=>{
+        const g=cx.createRadialGradient(hx,VY,0,hx,VY,r);
+        g.addColorStop(0,c+(~~(a*255)).toString(16).padStart(2,'0'));
+        g.addColorStop(1,'transparent');
+        cx.fillStyle=g; cx.fillRect(0,0,W,VY+90);
+      });
+
+    // Road surface
     const r0=p3(-1.2,.999),r1=p3(1.2,.999),r2=p3(1.2,0),r3=p3(-1.2,0);
-    cx.beginPath();cx.moveTo(r0.x,r0.y);cx.lineTo(r1.x,r1.y);cx.lineTo(r2.x,r2.y);cx.lineTo(r3.x,r3.y);cx.closePath();
+    cx.beginPath();
+    cx.moveTo(r0.x,r0.y); cx.lineTo(r1.x,r1.y); cx.lineTo(r2.x,r2.y); cx.lineTo(r3.x,r3.y);
+    cx.closePath();
     const rg=cx.createLinearGradient(0,VY,0,H);
-    rg.addColorStop(0,'#050c16');rg.addColorStop(1,'#0d1928');
-    cx.fillStyle=rg;cx.fill();
+    rg.addColorStop(0,'#050c16'); rg.addColorStop(1,'#0d1928');
+    cx.fillStyle=rg; cx.fill();
+
+    // Road wet sheen
     const sh=cx.createLinearGradient(0,VY,0,H);
-    sh.addColorStop(0,'rgba(40,90,200,.07)');sh.addColorStop(.6,'rgba(255,255,255,.02)');sh.addColorStop(1,'transparent');
-    cx.fillStyle=sh;cx.fill();
+    sh.addColorStop(0,'rgba(40,90,200,.07)'); sh.addColorStop(.6,'rgba(255,255,255,.02)'); sh.addColorStop(1,'transparent');
+    cx.fillStyle=sh; cx.fill();
+
+    // Edge white lines
     for(const ex of[-1.1,1.1]){
       const pf=p3(ex,.999),pn=p3(ex,0);
-      cx.beginPath();cx.moveTo(pf.x,pf.y);cx.lineTo(pn.x,pn.y);
-      cx.strokeStyle='rgba(255,255,255,.28)';cx.lineWidth=1.5;cx.lineCap='butt';cx.stroke();
+      cx.beginPath(); cx.moveTo(pf.x,pf.y); cx.lineTo(pn.x,pn.y);
+      cx.strokeStyle='rgba(255,255,255,.28)'; cx.lineWidth=1.5; cx.lineCap='butt'; cx.stroke();
     }
-    const dLen=1/ND,phase=(t*DSP)%dLen;
+
+    // Center dashes flying toward viewer
+    const dLen=1/ND, phase=(t*DSP)%dLen;
     for(let i=0;i<ND;i++){
-      const z0=((i*dLen)+phase)%1,z1=Math.min(z0+dLen*.42,.999);
-      if(z0>.98||z1<.02)continue;
+      const z0=((i*dLen)+phase)%1;
+      const z1=Math.min(z0+dLen*.42,.999);
+      if(z0>.98||z1<.02) continue;
       const a0=p3(0,z0),a1=p3(0,z1);
-      cx.beginPath();cx.moveTo(a0.x,a0.y);cx.lineTo(a1.x,a1.y);
-      cx.strokeStyle=`rgba(255,205,40,${Math.pow(1-z0,.55)*.72})`;
-      cx.lineWidth=Math.max(.5,(1-z0)*3.8);cx.lineCap='round';cx.stroke();
+      const alpha=Math.pow(1-z0,.55)*.72;
+      cx.beginPath(); cx.moveTo(a0.x,a0.y); cx.lineTo(a1.x,a1.y);
+      cx.strokeStyle=`rgba(255,205,40,${alpha})`;
+      cx.lineWidth=Math.max(.5,(1-z0)*3.8); cx.lineCap='round'; cx.stroke();
     }
+
+    // Distant car tail lights
     for(const car of cars){
-      car.z-=car.sp;if(car.z<.08)car.z=.82+Math.random()*.12;
+      car.z-=car.sp;
+      if(car.z<.08) car.z=.82+Math.random()*.12;
       for(const ox of[-.13,.13]){
-        const pp=p3(ox,car.z),rad=Math.max(1.5,(1-car.z)*14);
+        const pp=p3(ox,car.z);
+        const rad=Math.max(1.5,(1-car.z)*14);
         const g=cx.createRadialGradient(pp.x,pp.y,0,pp.x,pp.y,rad*3.5);
-        g.addColorStop(0,'#FF1818');g.addColorStop(.35,'rgba(210,18,18,.45)');g.addColorStop(1,'transparent');
-        cx.fillStyle=g;cx.beginPath();cx.arc(pp.x,pp.y,rad*3.5,0,Math.PI*2);cx.fill();
+        g.addColorStop(0,'#FF1818'); g.addColorStop(.35,'rgba(210,18,18,.45)'); g.addColorStop(1,'transparent');
+        cx.fillStyle=g; cx.beginPath(); cx.arc(pp.x,pp.y,rad*3.5,0,Math.PI*2); cx.fill();
       }
     }
+
+    // Side bokeh city lights
     for(const l of lights){
-      l.z-=.006*l.sp;if(l.z<=.01){Object.assign(l,mkL());l.z=.88+Math.random()*.1;}
-      const s=.6/(.6+l.z),sx=VX+l.sd*l.rx*W*.42*s,sy=VY+(H-VY)*(1-s)*.95+(H-VY)*.04;
+      l.z-=.006*l.sp;
+      if(l.z<=.01){Object.assign(l,mkL());l.z=.88+Math.random()*.1;}
+      const s=.6/(.6+l.z);
+      const sx=VX+l.sd*l.rx*W*.42*s;
+      const sy=VY+(H-VY)*(1-s)*.95+(H-VY)*.04;
       if(sx<-60||sx>W+60){Object.assign(l,mkL());continue;}
-      const rad=l.r*(.6+(1-l.z)*3),g=cx.createRadialGradient(sx,sy,0,sx,sy,rad*4);
-      g.addColorStop(0,l.col);g.addColorStop(.4,l.col+'55');g.addColorStop(1,'transparent');
-      cx.globalAlpha=Math.min(.9,.3+(1-l.z)*.65);cx.fillStyle=g;
-      cx.beginPath();cx.arc(sx,sy,rad*4,0,Math.PI*2);cx.fill();
+      const rad=l.r*(.6+(1-l.z)*3);
+      const g=cx.createRadialGradient(sx,sy,0,sx,sy,rad*4);
+      g.addColorStop(0,l.col); g.addColorStop(.4,l.col+'55'); g.addColorStop(1,'transparent');
+      cx.globalAlpha=Math.min(.9,.3+(1-l.z)*.65);
+      cx.fillStyle=g; cx.beginPath(); cx.arc(sx,sy,rad*4,0,Math.PI*2); cx.fill();
     }
     cx.globalAlpha=1;
+
+    // Speed-streak vignette
     const vig=cx.createRadialGradient(VX,H*.65,H*.05,VX,H*.5,W*.78);
-    vig.addColorStop(0,'transparent');vig.addColorStop(1,'rgba(1,5,9,.58)');
-    cx.fillStyle=vig;cx.fillRect(0,0,W,H);
-    t+=1/60;requestAnimationFrame(draw);
+    vig.addColorStop(0,'transparent'); vig.addColorStop(1,'rgba(1,5,9,.58)');
+    cx.fillStyle=vig; cx.fillRect(0,0,W,H);
+
+    t+=1/60;
+    requestAnimationFrame(draw);
   }
-  resize();new ResizeObserver(resize).observe(scene);draw();
+
+  resize();
+  new ResizeObserver(resize).observe(scene);
+  draw();
 })();
 
 // Apple-touch-icon (iPhone "Add to Home Screen")
 (function(){
   const C=document.createElement('canvas'); C.width=C.height=180;
   const x=C.getContext('2d');
+  // Background
   x.beginPath(); x.roundRect(0,0,180,180,36); x.fillStyle='#0F1C30'; x.fill();
+  // Car body
   x.fillStyle='#F5C518';
   x.beginPath(); x.roundRect(22,102,136,54,12); x.fill();
+  // Roof
   x.beginPath(); x.moveTo(44,102); x.lineTo(59,52); x.lineTo(121,52); x.lineTo(136,102); x.closePath(); x.fill();
+  // Taxi sign (white bar on roof)
   x.fillStyle='#fff'; x.beginPath(); x.roundRect(66,38,48,16,5); x.fill();
+  // Windshield
   x.fillStyle='rgba(15,28,48,.58)';
   x.beginPath(); x.moveTo(60,102); x.lineTo(68,66); x.lineTo(112,66); x.lineTo(120,102); x.closePath(); x.fill();
+  // Wheels
   x.fillStyle='#162A45';
   [50,130].forEach(w=>{x.beginPath();x.arc(w,156,17,0,Math.PI*2);x.fill();});
+  // Wheel shine
   x.fillStyle='rgba(255,255,255,.15)';
   [50,130].forEach(w=>{x.beginPath();x.arc(w,153,7,0,Math.PI*2);x.fill();});
   const L=document.createElement('link');
