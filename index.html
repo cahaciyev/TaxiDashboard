@@ -713,10 +713,9 @@ function renderAvto(){
 const GB_API   = 'https://app.geekbro.ai/be-service/drivers';
 const GB_LOGIN = 'https://app.geekbro.ai/be-service/auth/login';
 const GB_CID   = 'f5004d86-5e84-4800-aef1-be710480576a';
-const GB_DEF_U = atob('Y2F2aWRoYWNpeWV2RQ==');
-const GB_DEF_P = atob('Y2F2aWQhRTI0');
+const GB_DEF_T = atob('ZXlKMGVYQWlPaUpLVjFRaUxDSmhiR2NpT2lKSVV6STFOaUo5LmV5SnpkV0lpT2lKallYWnBaR2hoWTJsNVpYWkZJaXdpWTI5dGNHRnVlVWxrSWpvaVpqVXdNRFJrT0RZdE5XVTROQzAwT0RBd0xXRmxaakV0WW1VM01UQTBPREExTnpaaElpd2ljbTlzWlNJNklrOVhUa1ZTSWl3aVpYaHdJam94TnpneE5qZzNORGMzZlEuc0hwcWZrLUpiNVFpN3NLSFIybVIyQkVZRUl3b0FpNWhwSG1UUjlCRS1iYw==');
 
-let gpsToken   = localStorage.getItem('gbToken') || null;
+let gpsToken   = localStorage.getItem('gbToken') || GB_DEF_T;
 let gpsPeriod  = 'today';
 let gpsFetching = false;
 
@@ -905,17 +904,9 @@ const _origSwitchTabForGps = typeof switchTab === 'function' ? switchTab : null;
 
 // Init GPS on page load
 (async function initGPS(){
-  const savedUser = localStorage.getItem('gbUser') || GB_DEF_U;
-  const savedPass = localStorage.getItem('gbPass') || GB_DEF_P;
-  renderGpsStatic();
   gpsHideLogin();
-  document.getElementById('gpsConnectInfo').textContent='● Bağlı: '+savedUser;
-  setGpsStatus('● Giriş edilir…','#A9BCD8');
-  if(gpsToken){
-    await fetchGpsData();
-  } else {
-    await gpsLogin(savedUser, savedPass, true);
-  }
+  document.getElementById('gpsConnectInfo').textContent='● Bağlı: cavidhaciyevE';
+  await fetchGpsData();
 })();
 
 // ============ RENDER ALL ============
