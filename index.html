@@ -1,6 +1,11 @@
 ﻿<meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0F1C30">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Avtopark">
 <title>Avtopark — İnteraktiv Dashboard</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%230F1C30'/><rect x='8' y='37' width='48' height='19' rx='4' fill='%23F5C518'/><path d='M16 37L21 19h22l5 18z' fill='%23F5C518'/><rect x='26' y='13' width='12' height='8' rx='2' fill='white'/><path d='M22 37l4-13h12l4 13z' fill='%230F1C30' opacity='.55'/><circle cx='20' cy='56' r='6' fill='%23162A45'/><circle cx='44' cy='56' r='6' fill='%23162A45'/></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
@@ -1147,5 +1152,25 @@ async function loadLive(){
 document.getElementById('refresh').addEventListener('click', loadLive);
 setInterval(loadLive, AUTO_MS);
 loadLive();
+
+// Apple-touch-icon (iPhone "Add to Home Screen")
+(function(){
+  const C=document.createElement('canvas'); C.width=C.height=180;
+  const x=C.getContext('2d');
+  x.beginPath(); x.roundRect(0,0,180,180,36); x.fillStyle='#0F1C30'; x.fill();
+  x.fillStyle='#F5C518';
+  x.beginPath(); x.roundRect(22,102,136,54,12); x.fill();
+  x.beginPath(); x.moveTo(44,102); x.lineTo(59,52); x.lineTo(121,52); x.lineTo(136,102); x.closePath(); x.fill();
+  x.fillStyle='#fff'; x.beginPath(); x.roundRect(66,38,48,16,5); x.fill();
+  x.fillStyle='rgba(15,28,48,.58)';
+  x.beginPath(); x.moveTo(60,102); x.lineTo(68,66); x.lineTo(112,66); x.lineTo(120,102); x.closePath(); x.fill();
+  x.fillStyle='#162A45';
+  [50,130].forEach(w=>{x.beginPath();x.arc(w,156,17,0,Math.PI*2);x.fill();});
+  x.fillStyle='rgba(255,255,255,.15)';
+  [50,130].forEach(w=>{x.beginPath();x.arc(w,153,7,0,Math.PI*2);x.fill();});
+  const L=document.createElement('link');
+  L.rel='apple-touch-icon'; L.sizes='180x180'; L.href=C.toDataURL();
+  document.head.appendChild(L);
+})();
 </script>
 
