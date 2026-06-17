@@ -164,7 +164,47 @@
 
   @media(max-width:1060px){.kpis{grid-template-columns:repeat(3,1fr)}}
   @media(max-width:920px){.kpis{grid-template-columns:repeat(3,1fr)}.grid2{grid-template-columns:1fr}.vgrid{grid-template-columns:1fr 1fr}}
-  @media(max-width:560px){.kpis{grid-template-columns:repeat(2,1fr)}.vgrid{grid-template-columns:1fr}.brand h1{font-size:21px}.atbl thead{display:none}}
+  @media(max-width:640px){
+    .kpis{grid-template-columns:repeat(2,1fr)}
+    .kpi .big{font-size:20px}
+    .vgrid{grid-template-columns:1fr 1fr}
+    .brand h1{font-size:20px}
+    .atbl thead{display:none}
+    #gpsSeg{display:grid;grid-template-columns:1fr 1fr;gap:4px;background:transparent;padding:0;border-radius:0}
+    #gpsSeg button{border-radius:8px;background:#E7ECF4;color:var(--mut);font-size:12px;padding:8px 6px;text-align:center}
+    #gpsSeg button.on{background:var(--deck);color:#fff}
+    .gps-kpi-row{grid-template-columns:1fr 1fr 1fr!important;gap:8px!important}
+    .gps-kpi-row .kpi{min-width:0!important}
+    .gps-kpi-row .kpi .big{font-size:13px!important}
+    .gps-kpi-row .kpi:last-child{display:none}
+    .gps-kpi-row .kpi .lab{font-size:10px}
+    #gpsTblBody tr td:nth-child(3),#gpsTblBody tr td:nth-child(4),#gpsTblBody tr td:nth-child(5),
+    #v-gps .atbl thead th:nth-child(3),#v-gps .atbl thead th:nth-child(4),#v-gps .atbl thead th:nth-child(5){display:none}
+    .vcard{padding:12px}
+    .plate .pn{font-size:12px;padding:5px 7px}
+    .alert{padding:9px 10px}
+    .panel{padding:14px}
+    .wrap{padding-left:12px;padding-right:12px}
+    .brand .sub{font-size:12px;gap:5px}
+  }
+  @media(max-width:420px){
+    .kpis{grid-template-columns:repeat(2,1fr);gap:8px}
+    .kpi{padding:12px 10px}
+    .kpi .big{font-size:18px}
+    .vgrid{grid-template-columns:1fr}
+    .brand h1{font-size:18px}
+    .brand .eyebrow{font-size:10px}
+    #gpsSeg button{font-size:11px;padding:7px 4px}
+    #v-gps .kpi .big{font-size:12px!important}
+    #v-gps .kpi .delta{font-size:10px}
+    .chip{padding:7px 10px;min-width:80px}
+    .chip .v{font-size:16px}
+    .filters{gap:6px}
+    .fbtn{padding:6px 12px;font-size:12px}
+    .sec-h h2{font-size:15px}
+    .panel{padding:12px}
+    .wrap{padding-left:10px;padding-right:10px}
+  }
   @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 
   /* ===== MOBİL ALT NAVİQASİYA (WhatsApp stili) ===== */
@@ -367,7 +407,7 @@
       </div>
 
       <!-- KPI: Active / Top / Bottom -->
-      <div style="display:grid;grid-template-columns:repeat(3,auto) 1fr;gap:12px;margin-bottom:18px">
+      <div class="gps-kpi-row" style="display:grid;grid-template-columns:repeat(3,auto) 1fr;gap:12px;margin-bottom:18px">
         <div class="kpi kpi-b" style="min-width:140px">
           <div class="lab">Aktiv Avtomobil</div>
           <div class="big num" id="gpsActive">—</div>
