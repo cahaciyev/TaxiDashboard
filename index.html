@@ -400,14 +400,31 @@ const pbColor=v=>v>=0.5?'#1E9E8F':v>=0.45?'#E29A2E':'#DD5247';
 // ============ ALERTS ============
 function getDebtors(){
   if(!daily.length) return [];
-  const m = daily[daily.length-1];
+
+  // Başlamış ən son ayı tap — gəlməmiş (gələcək) ayları atla
+  let mIdx = daily.length - 1;
+  try {
+    while(mIdx >= 0){
+      const tmp = daily[mIdx];
+      const p = (tmp.full||'').split(' ');
+      const mo = AZ_MON[p[0]], yr = parseInt(p[1]);
+      if(mo && yr && new Date(yr, mo-1, 1) <= TODAY) break;
+      mIdx--;
+    }
+  } catch(e){ mIdx = daily.length - 1; }
+  if(mIdx < 0) return [];
+
+  const m = daily[mIdx];
   const result = [];
 
   // Cari ay üçün yalnız bu günə qədər olan xanalara bax
-  const parts = (m.full || '').split(' ');
-  const mo = AZ_MON[parts[0]], yr = parseInt(parts[1]);
-  const isCurMo = mo && yr && TODAY.getMonth()+1===mo && TODAY.getFullYear()===yr;
-  const checkUpTo = isCurMo ? Math.min(TODAY.getDate(), m.days.length) : m.days.length;
+  let checkUpTo = m.days ? m.days.length : 31;
+  try {
+    const parts = (m.full || '').split(' ');
+    const mo = AZ_MON[parts[0]], yr = parseInt(parts[1]);
+    if(mo && yr && TODAY.getMonth()+1===mo && TODAY.getFullYear()===yr)
+      checkUpTo = Math.min(TODAY.getDate(), checkUpTo);
+  } catch(e) {}
 
   m.rows.forEach(row => {
     // Arxa tərəfdən boş xanaları say — boş = ödəniş edilməyib
