@@ -366,8 +366,8 @@
         <span id="gpsConnectInfo" style="font-size:12px;color:var(--mut)"></span>
       </div>
 
-      <!-- KPI: only Active -->
-      <div style="display:grid;grid-template-columns:repeat(2,auto) 1fr;gap:12px;margin-bottom:18px">
+      <!-- KPI: Active / Top / Bottom -->
+      <div style="display:grid;grid-template-columns:repeat(3,auto) 1fr;gap:12px;margin-bottom:18px">
         <div class="kpi kpi-b" style="min-width:140px">
           <div class="lab">Aktiv Avtomobil</div>
           <div class="big num" id="gpsActive">—</div>
@@ -377,6 +377,11 @@
           <div class="lab">Ən çox sürən</div>
           <div class="big" id="gpsTop" style="font-size:16px">—</div>
           <div class="delta num" id="gpsTopKm" style="color:var(--teal)"></div>
+        </div>
+        <div class="kpi kpi-a" style="min-width:160px">
+          <div class="lab">Ən az sürən</div>
+          <div class="big" id="gpsBot" style="font-size:16px">—</div>
+          <div class="delta num" id="gpsBotKm" style="color:var(--amber)"></div>
         </div>
         <div></div>
       </div>
@@ -722,22 +727,23 @@ function fmtMin(m){
 
 function gpsDateRange(p){
   const n=new Date();
-  const d0=(d,h=0,mi=0,s=0)=>{const x=new Date(d);x.setHours(h,mi,s,0);return x.toISOString();};
+  const ms0=(d)=>{const x=new Date(d);x.setHours(0,0,0,0);return x.getTime();};
+  const ms23=(d)=>{const x=new Date(d);x.setHours(23,59,59,999);return x.getTime();};
   if(p==='today'){
-    return {startDate:d0(n,0,0,0), endDate:d0(n,23,59,59)};
+    return {movementAtFrom:ms0(n), movementAtTill:ms23(n), query:''};
   }
   if(p==='week'){
     const mon=new Date(n); mon.setDate(n.getDate()-((n.getDay()||7)-1));
-    return {startDate:d0(mon,0,0,0), endDate:d0(n,23,59,59)};
+    return {movementAtFrom:ms0(mon), movementAtTill:ms23(n), query:''};
   }
   if(p==='lastweek'){
-    const sun=new Date(n); sun.setDate(n.getDate()-((n.getDay()||7)));
+    const sun=new Date(n); sun.setDate(n.getDate()-(n.getDay()||7));
     const mon=new Date(sun); mon.setDate(sun.getDate()-6);
-    return {startDate:d0(mon,0,0,0), endDate:d0(sun,23,59,59)};
+    return {movementAtFrom:ms0(mon), movementAtTill:ms23(sun), query:''};
   }
   if(p==='month'){
     const s=new Date(n.getFullYear(),n.getMonth(),1);
-    return {startDate:d0(s,0,0,0), endDate:d0(n,23,59,59)};
+    return {movementAtFrom:ms0(s), movementAtTill:ms23(n), query:''};
   }
 }
 
@@ -835,6 +841,9 @@ function renderGpsData(drivers){
   const top=drivers.reduce((a,b)=>(b.dailyKm||0)>(a.dailyKm||0)?b:a, drivers[0]||{});
   document.getElementById('gpsTop').textContent=top?.vehicle?.plateNumber||top?.firstName||'—';
   document.getElementById('gpsTopKm').textContent=(top?.dailyKm||0).toFixed(2)+' km';
+  const bot=drivers.reduce((a,b)=>(b.dailyKm||0)<(a.dailyKm||0)?b:a, drivers[0]||{});
+  document.getElementById('gpsBot').textContent=bot?.vehicle?.plateNumber||bot?.firstName||'—';
+  document.getElementById('gpsBotKm').textContent=(bot?.dailyKm||0).toFixed(2)+' km';
   const sorted=[...drivers].sort((a,b)=>(b.dailyKm||0)-(a.dailyKm||0));
   let h='';
   sorted.forEach(d=>{
