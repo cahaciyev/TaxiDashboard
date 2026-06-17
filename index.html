@@ -219,38 +219,10 @@
   }
   @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 
-  /* ===== HEADER ANIMATION SCENE ===== */
+  /* ===== HEADER 3D CANVAS SCENE ===== */
   .hdr-scene{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:0}
-
-  .hdr-road{position:absolute;bottom:0;left:0;right:0;height:2px;background:rgba(255,255,255,.05)}
-  .hdr-road::before{
-    content:"";position:absolute;bottom:12px;left:0;right:0;height:1px;
-    background:repeating-linear-gradient(90deg,rgba(255,255,255,.14) 0,rgba(255,255,255,.14) 28px,transparent 28px,transparent 56px);
-    background-size:56px 1px;animation:stripe-scroll 1.5s linear infinite}
-  @keyframes stripe-scroll{to{background-position:56px 0}}
-
-  .hdr-bokeh span{position:absolute;border-radius:50%;filter:blur(28px);animation:bokeh-float 10s ease-in-out infinite}
-  .hdr-bokeh span:nth-child(1){width:100px;height:100px;background:#F5C518;top:-30%;left:70%;opacity:.09;animation-delay:0s}
-  .hdr-bokeh span:nth-child(2){width:70px;height:70px;background:#2D6CDF;top:60%;left:10%;opacity:.13;animation-delay:-4s}
-  .hdr-bokeh span:nth-child(3){width:60px;height:60px;background:#1E9E8F;top:10%;left:38%;opacity:.1;animation-delay:-7s}
-  @keyframes bokeh-float{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-12px) scale(1.08)}}
-
-  .hdr-taxi{position:absolute;bottom:16px;left:100%;display:flex;align-items:flex-end;gap:0;
-    animation:taxi-cross 13s linear infinite}
-  .hdr-taxi2{animation-delay:-6.5s;bottom:20px}
-  @keyframes taxi-cross{
-    0%  {transform:translateX(0);opacity:0}
-    4%  {opacity:1}
-    93% {opacity:1}
-    100%{transform:translateX(calc(-100vw - 300px));opacity:0}}
-
-  .hdr-beam{width:65px;height:26px;flex:0 0 auto;align-self:flex-end;margin-bottom:10px;
-    background:linear-gradient(270deg,rgba(255,249,180,.28) 0%,rgba(255,249,180,0) 100%);
-    clip-path:polygon(100% 20%,100% 80%,0% 100%,0% 0%);border-radius:2px 0 0 2px}
-  .hdr-taxi2 .hdr-beam{opacity:.6;width:45px}
-
-  @media(max-width:640px){.hdr-taxi2{display:none}}
-  @media(max-width:420px){.hdr-taxi{display:none}.hdr-bokeh{display:none}.hdr-road::before{display:none}}
+  .hdr-scene canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+  @media(max-width:420px){.hdr-scene{display:none}}
 
   /* ===== MOBİL ALT NAVİQASİYA (WhatsApp stili) ===== */
   .mob-nav{
@@ -290,41 +262,7 @@
 </style>
 
 <header>
-  <div class="hdr-scene" aria-hidden="true">
-    <div class="hdr-road"></div>
-    <div class="hdr-bokeh"><span></span><span></span><span></span></div>
-    <div class="hdr-taxi">
-      <div class="hdr-beam"></div>
-      <svg width="92" height="46" viewBox="0 0 92 46" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect x="4" y="22" width="84" height="20" rx="5" fill="#F5C518"/>
-        <path d="M24 22L29 7H65L70 22Z" fill="#F5C518"/>
-        <path d="M30 22L33 9H46V22Z" fill="#0a1628" opacity=".62"/>
-        <path d="M49 22V9H63L67 22Z" fill="#0a1628" opacity=".62"/>
-        <rect x="34" y="3" width="22" height="6" rx="2" fill="white" opacity=".95"/>
-        <rect x="2" y="26" width="7" height="6" rx="2" fill="#FFF9C4"/>
-        <rect x="83" y="26" width="6" height="6" rx="2" fill="#FF3333" opacity=".75"/>
-        <circle cx="22" cy="42" r="7" fill="#0d1a2d"/>
-        <circle cx="22" cy="42" r="2.5" fill="rgba(255,255,255,.22)"/>
-        <circle cx="70" cy="42" r="7" fill="#0d1a2d"/>
-        <circle cx="70" cy="42" r="2.5" fill="rgba(255,255,255,.22)"/>
-        <path d="M31 11L33 9H38L36 11Z" fill="rgba(255,255,255,.28)"/>
-      </svg>
-    </div>
-    <div class="hdr-taxi hdr-taxi2">
-      <div class="hdr-beam"></div>
-      <svg width="64" height="32" viewBox="0 0 92 46" fill="none" xmlns="http://www.w3.org/2000/svg" opacity=".5">
-        <rect x="4" y="22" width="84" height="20" rx="5" fill="#F5C518"/>
-        <path d="M24 22L29 7H65L70 22Z" fill="#F5C518"/>
-        <path d="M30 22L33 9H46V22Z" fill="#0a1628" opacity=".62"/>
-        <path d="M49 22V9H63L67 22Z" fill="#0a1628" opacity=".62"/>
-        <rect x="34" y="3" width="22" height="6" rx="2" fill="white" opacity=".9"/>
-        <rect x="2" y="26" width="7" height="6" rx="2" fill="#FFF9C4"/>
-        <rect x="83" y="26" width="6" height="6" rx="2" fill="#FF3333" opacity=".7"/>
-        <circle cx="22" cy="42" r="7" fill="#0d1a2d"/>
-        <circle cx="70" cy="42" r="7" fill="#0d1a2d"/>
-      </svg>
-    </div>
-  </div>
+  <div class="hdr-scene" aria-hidden="true"></div>
   <div class="wrap">
     <div class="head-in">
       <div class="brand">
@@ -1223,6 +1161,82 @@ async function loadLive(){
 document.getElementById('refresh').addEventListener('click', loadLive);
 setInterval(loadLive, AUTO_MS);
 loadLive();
+
+// ── 3D ROAD CANVAS HEADER ──
+(function(){
+  const scene=document.querySelector('.hdr-scene');
+  if(!scene)return;
+  const cv=document.createElement('canvas');
+  scene.appendChild(cv);
+  const cx=cv.getContext('2d');
+  let W=0,H=0,t=0;
+  function resize(){W=cv.width=scene.offsetWidth;H=cv.height=scene.offsetHeight;}
+  function p3(x,z){const f=.58,vx=W*.5,vy=H*.34,s=f/(f+z);return{x:vx+x*W*.48*s,y:vy+(H-vy)*(1-s),s};}
+  const COLS=['#F5C518','#2D6CDF','#1E9E8F','#FF6B35','#E8E8FF'];
+  function mkL(){return{sd:Math.random()>.5?1:-1,rx:1.3+Math.random()*2.5,z:Math.random(),col:COLS[~~(Math.random()*5)],r:3+Math.random()*4,sp:.45+Math.random()*.7};}
+  const lights=Array.from({length:24},mkL);
+  const cars=[{z:.78,sp:.0045},{z:.54,sp:.006},{z:.63,sp:.005}];
+  const ND=16,DSP=.72;
+  function draw(){
+    if(document.hidden||!W){requestAnimationFrame(draw);return;}
+    cx.clearRect(0,0,W,H);
+    const VX=W*.5,VY=H*.34;
+    const sg=cx.createLinearGradient(0,0,0,VY+H*.1);
+    sg.addColorStop(0,'#010509');sg.addColorStop(.65,'#081120');sg.addColorStop(1,'#0d1a30');
+    cx.fillStyle=sg;cx.fillRect(0,0,W,VY+H*.1);
+    [[VX*.25,'#1a4db0',.22,220],[VX,'#b88a0c',.13,165],[VX*1.75,'#0c7060',.17,190]].forEach(([hx,c,a,r])=>{
+      const g=cx.createRadialGradient(hx,VY,0,hx,VY,r);
+      g.addColorStop(0,c+(~~(a*255)).toString(16).padStart(2,'0'));g.addColorStop(1,'transparent');
+      cx.fillStyle=g;cx.fillRect(0,0,W,VY+90);
+    });
+    const r0=p3(-1.2,.999),r1=p3(1.2,.999),r2=p3(1.2,0),r3=p3(-1.2,0);
+    cx.beginPath();cx.moveTo(r0.x,r0.y);cx.lineTo(r1.x,r1.y);cx.lineTo(r2.x,r2.y);cx.lineTo(r3.x,r3.y);cx.closePath();
+    const rg=cx.createLinearGradient(0,VY,0,H);
+    rg.addColorStop(0,'#050c16');rg.addColorStop(1,'#0d1928');
+    cx.fillStyle=rg;cx.fill();
+    const sh=cx.createLinearGradient(0,VY,0,H);
+    sh.addColorStop(0,'rgba(40,90,200,.07)');sh.addColorStop(.6,'rgba(255,255,255,.02)');sh.addColorStop(1,'transparent');
+    cx.fillStyle=sh;cx.fill();
+    for(const ex of[-1.1,1.1]){
+      const pf=p3(ex,.999),pn=p3(ex,0);
+      cx.beginPath();cx.moveTo(pf.x,pf.y);cx.lineTo(pn.x,pn.y);
+      cx.strokeStyle='rgba(255,255,255,.28)';cx.lineWidth=1.5;cx.lineCap='butt';cx.stroke();
+    }
+    const dLen=1/ND,phase=(t*DSP)%dLen;
+    for(let i=0;i<ND;i++){
+      const z0=((i*dLen)+phase)%1,z1=Math.min(z0+dLen*.42,.999);
+      if(z0>.98||z1<.02)continue;
+      const a0=p3(0,z0),a1=p3(0,z1);
+      cx.beginPath();cx.moveTo(a0.x,a0.y);cx.lineTo(a1.x,a1.y);
+      cx.strokeStyle=`rgba(255,205,40,${Math.pow(1-z0,.55)*.72})`;
+      cx.lineWidth=Math.max(.5,(1-z0)*3.8);cx.lineCap='round';cx.stroke();
+    }
+    for(const car of cars){
+      car.z-=car.sp;if(car.z<.08)car.z=.82+Math.random()*.12;
+      for(const ox of[-.13,.13]){
+        const pp=p3(ox,car.z),rad=Math.max(1.5,(1-car.z)*14);
+        const g=cx.createRadialGradient(pp.x,pp.y,0,pp.x,pp.y,rad*3.5);
+        g.addColorStop(0,'#FF1818');g.addColorStop(.35,'rgba(210,18,18,.45)');g.addColorStop(1,'transparent');
+        cx.fillStyle=g;cx.beginPath();cx.arc(pp.x,pp.y,rad*3.5,0,Math.PI*2);cx.fill();
+      }
+    }
+    for(const l of lights){
+      l.z-=.006*l.sp;if(l.z<=.01){Object.assign(l,mkL());l.z=.88+Math.random()*.1;}
+      const s=.6/(.6+l.z),sx=VX+l.sd*l.rx*W*.42*s,sy=VY+(H-VY)*(1-s)*.95+(H-VY)*.04;
+      if(sx<-60||sx>W+60){Object.assign(l,mkL());continue;}
+      const rad=l.r*(.6+(1-l.z)*3),g=cx.createRadialGradient(sx,sy,0,sx,sy,rad*4);
+      g.addColorStop(0,l.col);g.addColorStop(.4,l.col+'55');g.addColorStop(1,'transparent');
+      cx.globalAlpha=Math.min(.9,.3+(1-l.z)*.65);cx.fillStyle=g;
+      cx.beginPath();cx.arc(sx,sy,rad*4,0,Math.PI*2);cx.fill();
+    }
+    cx.globalAlpha=1;
+    const vig=cx.createRadialGradient(VX,H*.65,H*.05,VX,H*.5,W*.78);
+    vig.addColorStop(0,'transparent');vig.addColorStop(1,'rgba(1,5,9,.58)');
+    cx.fillStyle=vig;cx.fillRect(0,0,W,H);
+    t+=1/60;requestAnimationFrame(draw);
+  }
+  resize();new ResizeObserver(resize).observe(scene);draw();
+})();
 
 // Apple-touch-icon (iPhone "Add to Home Screen")
 (function(){
