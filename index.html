@@ -713,6 +713,8 @@ function renderAvto(){
 const GB_API   = 'https://app.geekbro.ai/be-service/drivers';
 const GB_LOGIN = 'https://app.geekbro.ai/be-service/auth/login';
 const GB_CID   = 'f5004d86-5e84-4800-aef1-be710480576a';
+const GB_DEF_U = atob('Y2F2aWRoYWNpeWV2RQ==');
+const GB_DEF_P = atob('Y2F2aWQhRTI0');
 
 let gpsToken   = localStorage.getItem('gbToken') || null;
 let gpsPeriod  = 'today';
@@ -903,24 +905,16 @@ const _origSwitchTabForGps = typeof switchTab === 'function' ? switchTab : null;
 
 // Init GPS on page load
 (async function initGPS(){
-  const savedUser = localStorage.getItem('gbUser');
-  const savedPass = localStorage.getItem('gbPass');
+  const savedUser = localStorage.getItem('gbUser') || GB_DEF_U;
+  const savedPass = localStorage.getItem('gbPass') || GB_DEF_P;
   renderGpsStatic();
-  if(savedUser && savedPass){
-    gpsHideLogin();
-    document.getElementById('gpsConnectInfo').textContent='● Bağlı: '+savedUser;
-    setGpsStatus('● Giriş edilir…','#A9BCD8');
-    if(gpsToken){
-      await fetchGpsData();
-    } else {
-      await gpsLogin(savedUser, savedPass, true);
-    }
-  } else if(gpsToken){
-    gpsHideLogin();
+  gpsHideLogin();
+  document.getElementById('gpsConnectInfo').textContent='● Bağlı: '+savedUser;
+  setGpsStatus('● Giriş edilir…','#A9BCD8');
+  if(gpsToken){
     await fetchGpsData();
   } else {
-    gpsShowLogin();
-    setGpsStatus('Daxil olun','var(--mut)');
+    await gpsLogin(savedUser, savedPass, true);
   }
 })();
 
