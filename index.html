@@ -402,20 +402,21 @@ function getDebtors(){
   if(!daily.length) return [];
   const m = daily[daily.length-1];
   const result = [];
+
+  // Cari ay üçün yalnız bu günə qədər olan xanalara bax
+  const parts = (m.full || '').split(' ');
+  const mo = AZ_MON[parts[0]], yr = parseInt(parts[1]);
+  const isCurMo = mo && yr && TODAY.getMonth()+1===mo && TODAY.getFullYear()===yr;
+  const checkUpTo = isCurMo ? Math.min(TODAY.getDate(), m.days.length) : m.days.length;
+
   m.rows.forEach(row => {
-    let lastIdx = -1;
-    for(let i = row.vals.length-1; i >= 0; i--){
-      const v = row.vals[i];
-      if(v !== '' && v !== null && v !== undefined){ lastIdx = i; break; }
-    }
-    if(lastIdx < 0) return;
+    // Arxa tərəfdən boş xanaları say — boş = ödəniş edilməyib
+    // İstənilən yazılmış dəyər (0, say, i, t) — arxa sıranı bitirir
     let streak = 0;
-    for(let i = lastIdx; i >= 0; i--){
+    for(let i = checkUpTo - 1; i >= 0; i--){
       const v = row.vals[i];
-      if(v === 0 || (typeof v === 'string' && v !== '' && !isNaN(+v) && +v === 0)){
+      if(v === '' || v === null || v === undefined){
         streak++;
-      } else if(v === '' || v === null || v === undefined){
-        continue;
       } else {
         break;
       }
