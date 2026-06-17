@@ -22,11 +22,14 @@
   .num{font-variant-numeric:tabular-nums}
   .wrap{max-width:1180px;margin:0 auto;padding:0 20px}
 
-  header{background:linear-gradient(160deg,var(--deck),var(--deck2));color:#fff;
+  header{background:linear-gradient(155deg,#08111f,#0F1C30 45%,#162A45);color:#fff;
     border-bottom:1px solid var(--line);position:relative;overflow:hidden}
   header::before{content:"";position:absolute;inset:0;
-    background:radial-gradient(900px 300px at 85% -40%,rgba(45,108,223,.25),transparent 60%)}
-  .head-in{position:relative;display:flex;flex-wrap:wrap;gap:18px;align-items:flex-end;
+    background:radial-gradient(ellipse 900px 300px at 85% -40%,rgba(45,108,223,.2),transparent 60%),
+               radial-gradient(ellipse 600px 250px at 10% 120%,rgba(242,182,24,.06),transparent 60%);
+    animation:hdr-glow 8s ease-in-out infinite alternate}
+  @keyframes hdr-glow{from{opacity:.7}to{opacity:1}}
+  .head-in{position:relative;z-index:2;display:flex;flex-wrap:wrap;gap:18px;align-items:flex-end;
     justify-content:space-between;padding:24px 0 18px}
   .brand .eyebrow{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#7FA0CF;font-weight:600}
   .brand h1{font-size:25px;font-weight:800;letter-spacing:-.02em;margin-top:4px}
@@ -214,7 +217,40 @@
     .panel{padding:12px}
     .wrap{padding-left:10px;padding-right:10px}
   }
-  @media(prefers-reduced-motion:reduce){*{transition:none!important}}
+  @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+  /* ===== HEADER ANIMATION SCENE ===== */
+  .hdr-scene{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:0}
+
+  .hdr-road{position:absolute;bottom:0;left:0;right:0;height:2px;background:rgba(255,255,255,.05)}
+  .hdr-road::before{
+    content:"";position:absolute;bottom:12px;left:0;right:0;height:1px;
+    background:repeating-linear-gradient(90deg,rgba(255,255,255,.14) 0,rgba(255,255,255,.14) 28px,transparent 28px,transparent 56px);
+    background-size:56px 1px;animation:stripe-scroll 1.5s linear infinite}
+  @keyframes stripe-scroll{to{background-position:56px 0}}
+
+  .hdr-bokeh span{position:absolute;border-radius:50%;filter:blur(28px);animation:bokeh-float 10s ease-in-out infinite}
+  .hdr-bokeh span:nth-child(1){width:100px;height:100px;background:#F5C518;top:-30%;left:70%;opacity:.09;animation-delay:0s}
+  .hdr-bokeh span:nth-child(2){width:70px;height:70px;background:#2D6CDF;top:60%;left:10%;opacity:.13;animation-delay:-4s}
+  .hdr-bokeh span:nth-child(3){width:60px;height:60px;background:#1E9E8F;top:10%;left:38%;opacity:.1;animation-delay:-7s}
+  @keyframes bokeh-float{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-12px) scale(1.08)}}
+
+  .hdr-taxi{position:absolute;bottom:16px;left:100%;display:flex;align-items:flex-end;gap:0;
+    animation:taxi-cross 13s linear infinite}
+  .hdr-taxi2{animation-delay:-6.5s;bottom:20px}
+  @keyframes taxi-cross{
+    0%  {transform:translateX(0);opacity:0}
+    4%  {opacity:1}
+    93% {opacity:1}
+    100%{transform:translateX(calc(-100vw - 300px));opacity:0}}
+
+  .hdr-beam{width:65px;height:26px;flex:0 0 auto;align-self:flex-end;margin-bottom:10px;
+    background:linear-gradient(270deg,rgba(255,249,180,.28) 0%,rgba(255,249,180,0) 100%);
+    clip-path:polygon(100% 20%,100% 80%,0% 100%,0% 0%);border-radius:2px 0 0 2px}
+  .hdr-taxi2 .hdr-beam{opacity:.6;width:45px}
+
+  @media(max-width:640px){.hdr-taxi2{display:none}}
+  @media(max-width:420px){.hdr-taxi{display:none}.hdr-bokeh{display:none}.hdr-road::before{display:none}}
 
   /* ===== MOBİL ALT NAVİQASİYA (WhatsApp stili) ===== */
   .mob-nav{
@@ -254,6 +290,41 @@
 </style>
 
 <header>
+  <div class="hdr-scene" aria-hidden="true">
+    <div class="hdr-road"></div>
+    <div class="hdr-bokeh"><span></span><span></span><span></span></div>
+    <div class="hdr-taxi">
+      <div class="hdr-beam"></div>
+      <svg width="92" height="46" viewBox="0 0 92 46" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="4" y="22" width="84" height="20" rx="5" fill="#F5C518"/>
+        <path d="M24 22L29 7H65L70 22Z" fill="#F5C518"/>
+        <path d="M30 22L33 9H46V22Z" fill="#0a1628" opacity=".62"/>
+        <path d="M49 22V9H63L67 22Z" fill="#0a1628" opacity=".62"/>
+        <rect x="34" y="3" width="22" height="6" rx="2" fill="white" opacity=".95"/>
+        <rect x="2" y="26" width="7" height="6" rx="2" fill="#FFF9C4"/>
+        <rect x="83" y="26" width="6" height="6" rx="2" fill="#FF3333" opacity=".75"/>
+        <circle cx="22" cy="42" r="7" fill="#0d1a2d"/>
+        <circle cx="22" cy="42" r="2.5" fill="rgba(255,255,255,.22)"/>
+        <circle cx="70" cy="42" r="7" fill="#0d1a2d"/>
+        <circle cx="70" cy="42" r="2.5" fill="rgba(255,255,255,.22)"/>
+        <path d="M31 11L33 9H38L36 11Z" fill="rgba(255,255,255,.28)"/>
+      </svg>
+    </div>
+    <div class="hdr-taxi hdr-taxi2">
+      <div class="hdr-beam"></div>
+      <svg width="64" height="32" viewBox="0 0 92 46" fill="none" xmlns="http://www.w3.org/2000/svg" opacity=".5">
+        <rect x="4" y="22" width="84" height="20" rx="5" fill="#F5C518"/>
+        <path d="M24 22L29 7H65L70 22Z" fill="#F5C518"/>
+        <path d="M30 22L33 9H46V22Z" fill="#0a1628" opacity=".62"/>
+        <path d="M49 22V9H63L67 22Z" fill="#0a1628" opacity=".62"/>
+        <rect x="34" y="3" width="22" height="6" rx="2" fill="white" opacity=".9"/>
+        <rect x="2" y="26" width="7" height="6" rx="2" fill="#FFF9C4"/>
+        <rect x="83" y="26" width="6" height="6" rx="2" fill="#FF3333" opacity=".7"/>
+        <circle cx="22" cy="42" r="7" fill="#0d1a2d"/>
+        <circle cx="70" cy="42" r="7" fill="#0d1a2d"/>
+      </svg>
+    </div>
+  </div>
   <div class="wrap">
     <div class="head-in">
       <div class="brand">
