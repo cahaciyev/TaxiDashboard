@@ -170,6 +170,61 @@
   .pn-sm{font-family:'JetBrains Mono',monospace;font-weight:700}
   footer{margin:34px 0 30px;text-align:center;color:var(--mut);font-size:12px}
 
+  /* ── CƏRİMƏ SİSTEMİ ── */
+  .fine-badge{display:inline-flex;align-items:center;gap:5px;border-radius:20px;
+    padding:4px 9px;font-size:11px;font-weight:700;cursor:pointer;margin-top:8px;transition:all .2s}
+  .fine-badge.none{background:#dff3ee;color:#0c6b5d}
+  .fine-badge.low{background:#fdeccd;color:#9a6610}
+  .fine-badge.high{background:#fbe3e0;color:#a8362d;animation:fpulse 2s ease-in-out infinite}
+  .fine-badge.loading{background:#E7ECF4;color:#6B7C93}
+  @keyframes fpulse{0%,100%{box-shadow:0 0 0 0 rgba(168,54,45,.35)}65%{box-shadow:0 0 0 6px rgba(168,54,45,0)}}
+
+  /* Fine modal (bottom sheet) */
+  .fine-ov{position:fixed;inset:0;background:rgba(0,0,0,.52);z-index:500;
+    display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s}
+  .fine-ov.open{opacity:1;pointer-events:all}
+  .fine-sheet{background:#fff;border-radius:22px 22px 0 0;max-height:88vh;width:100%;
+    max-width:620px;overflow:hidden;display:flex;flex-direction:column;
+    transform:translateY(100%);transition:transform .35s cubic-bezier(.175,.885,.32,1.275)}
+  .fine-ov.open .fine-sheet{transform:translateY(0)}
+  .fine-sh{padding:16px 18px 12px;border-bottom:1px solid #eef1f6;
+    display:flex;justify-content:space-between;align-items:center;gap:12px}
+  .fine-sh h3{font-size:15px;font-weight:800;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .fine-sh-close{width:32px;height:32px;border-radius:50%;background:#eef1f6;border:0;
+    cursor:pointer;font-size:18px;display:grid;place-items:center;flex:0 0 auto}
+  .fine-body{overflow-y:auto;padding:14px 18px 20px;flex:1;-webkit-overflow-scrolling:touch}
+  .fine-item{border:1px solid #e8ecf2;border-radius:13px;padding:13px 14px;margin-bottom:10px}
+  .fine-item.qarali{border-left:4px solid var(--red);background:#fef9f9}
+  .fine-item.pending{border-left:4px solid var(--amber);background:#fffdf4}
+  .fine-stag{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.04em;
+    text-transform:uppercase;padding:3px 8px;border-radius:20px;margin-bottom:6px}
+  .fine-stag.qarali{background:#fbe3e0;color:#a8362d}
+  .fine-stag.pending{background:#fdeccd;color:#9a6610}
+  .fine-proto{font-weight:700;font-size:13px;font-family:'JetBrains Mono',monospace}
+  .fine-name{font-size:12px;color:var(--mut);margin-top:2px}
+  .fine-amts{display:flex;gap:7px;margin-top:9px;flex-wrap:wrap}
+  .fine-amts span{font-size:12px;padding:4px 10px;border-radius:20px;font-weight:600}
+  .fa-amt{background:#EEF1F6;color:#456}
+  .fa-dis{background:#dff3ee;color:#0c6b5d}
+  .fa-tot{background:var(--deck);color:#fff}
+  .fine-text{font-size:13px;font-weight:600;color:#1a2940;line-height:1.4}
+  .fine-driver{font-size:11px;color:var(--mut);margin-top:3px}
+  .fine-final{font-weight:700;color:#a8362d}
+  .fine-sum{text-align:center;padding:14px 0 4px;font-size:13px;color:var(--mut);border-top:1px solid #eef1f6;margin-top:4px}
+  .fine-empty{text-align:center;padding:36px 0;color:var(--mut);font-size:14px}
+
+  /* Notification */
+  .fine-notif{position:fixed;top:-120px;left:50%;transform:translateX(-50%);z-index:600;
+    background:var(--red);color:#fff;padding:14px 16px;border-radius:16px;
+    box-shadow:0 8px 32px rgba(0,0,0,.35);min-width:260px;
+    max-width:360px;width:calc(100% - 28px);display:flex;gap:12px;align-items:flex-start}
+  .fine-notif.show{top:14px}
+  .fn-ico{font-size:22px;flex:0 0 auto;line-height:1;margin-top:1px}
+  .fn-body{flex:1;min-width:0}
+  .fn-title{font-weight:800;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .fn-sub{font-size:12px;opacity:.9;margin-top:3px;line-height:1.4}
+  .fn-cls{opacity:.6;cursor:pointer;font-size:20px;line-height:1;padding:0 0 0 4px;flex:0 0 auto;border:0;background:none;color:#fff}
+
   @media(max-width:1060px){.kpis{grid-template-columns:repeat(3,1fr)}}
   @media(max-width:920px){.kpis{grid-template-columns:repeat(3,1fr)}.grid2{grid-template-columns:1fr}.vgrid{grid-template-columns:1fr 1fr}}
   @media(max-width:640px){
@@ -290,6 +345,25 @@
   </div>
 </header>
 
+<!-- CƏRİMƏ MODAL -->
+<div class="fine-ov" id="fineOv" onclick="if(event.target===this)closeFineModal()">
+  <div class="fine-sheet">
+    <div class="fine-sh">
+      <h3 id="fineShTitle">Cərimələr</h3>
+      <button class="fine-sh-close" onclick="closeFineModal()">✕</button>
+    </div>
+    <div class="fine-body" id="fineShBody"><div class="fine-empty">Yüklənir…</div></div>
+  </div>
+</div>
+<!-- YENİ CƏRİMƏ BİLDİRİŞ -->
+<div class="fine-notif" id="fineNotif">
+  <div class="fn-ico">🚨</div>
+  <div class="fn-body">
+    <div class="fn-title" id="fineNotifTitle"></div>
+    <div class="fn-sub" id="fineNotifSub"></div>
+  </div>
+  <button class="fn-cls" onclick="document.getElementById('fineNotif').classList.remove('show')">✕</button>
+</div>
 <!-- MOBİL ALT NAVİQASİYA -->
 <nav class="mob-nav" id="mobNav">
   <button class="mnb on" data-v="ov">
@@ -730,16 +804,20 @@ function renderCars(f){
   curOwner=f;const list=f==='all'?cars:cars.filter(c=>c.o===f);
   document.getElementById('vgrid').innerHTML=list.map(c=>{
     const col=ownerColor[c.o]||'#6B7C93';const[a,b,d]=c.p.split('-');
-    return `<div class="vcard"><div class="vtop">
-      <span class="plate"><span class="az">★<span>AZ</span></span><span class="pn">${a} ${b} ${d}</span></span>
-      <span class="otag" style="color:${col};background:${col}1a">${c.o}</span></div>
+    const fid='fb-'+c.p.replace(/-/g,'_');
+    return `<div class="vcard" style="cursor:pointer" onclick="openFineModal('${c.p}')">
+      <div class="vtop">
+        <span class="plate"><span class="az">★<span>AZ</span></span><span class="pn">${a} ${b} ${d}</span></span>
+        <span class="otag" style="color:${col};background:${col}1a">${c.o}</span></div>
       <div class="vdriver">Sürücü: <b>${c.d||'—'}</b></div>
       <div class="bar-row"><div class="bar-lab"><span style="color:var(--mut)">Ödənilib</span>
         <span class="pc num" style="color:${pbColor(c.pb)}">${(c.pb*100).toFixed(1)}%</span></div>
         <div class="bar"><i style="width:${(c.pb*100).toFixed(1)}%;background:${pbColor(c.pb)}"></i></div></div>
       <div class="vfoot"><div>Gəlir<b class="num">${fmt(c.inc)} ₼</b></div>
         <div>Xərc<b class="num">${fmt(c.exp)} ₼</b></div>
-        <div style="text-align:right">Qiymət<b class="num">${fmt(c.price)} ₼</b></div></div></div>`;
+        <div style="text-align:right">Qiymət<b class="num">${fmt(c.price)} ₼</b></div></div>
+      <div id="${fid}" class="fine-badge loading">⏳ Cərimə yoxlanılır…</div>
+    </div>`;
   }).join('');
 }
 
@@ -1151,12 +1229,144 @@ async function loadLive(){
     document.getElementById('monthSel').innerHTML = '';
     renderAll();
     setStatus('● Canlı','#1E9E8F');
+    loadAllFines();
   } catch(e){
     console.error('Sheets xəta:', e);
     setStatus('● Xəta: '+e.message,'#DD5247');
     renderAll();
   }
 }
+
+// ── CƏRİMƏ API ──
+const WORKER_BASE = 'https://noisy-voice-468f.cahaciyev.workers.dev';
+const fineCache   = {};
+const fineSeenIds = {};
+
+function carNumForAPI(plate){ return plate.replace(/-/g,''); }
+
+function fineTotalAmount(protocols){
+  return protocols.reduce((s,p) => s+(parseFloat(p.total)||parseFloat(p.amount)||0), 0);
+}
+
+function isQarali(p){ return (p.text||'').toLowerCase().includes('qərarlı'); }
+
+async function fetchCarFines(plate){
+  const num  = carNumForAPI(plate);
+  const resp = await fetch(WORKER_BASE+'/fines?car='+encodeURIComponent(num));
+  if(!resp.ok) throw new Error('HTTP '+resp.status);
+  const data = await resp.json();
+  return Array.isArray(data) ? data : (data.protocols||data.data||[]);
+}
+
+function renderFineBadge(plate, protocols){
+  const el = document.getElementById('fb-'+plate.replace(/-/g,'_'));
+  if(!el) return;
+  const total = fineTotalAmount(protocols);
+  const count = protocols.length;
+  if(!count){
+    el.className='fine-badge none'; el.innerHTML='✔ Cərimə yoxdur';
+  } else if(total>300){
+    el.className='fine-badge high'; el.innerHTML='🚨 '+count+' cərimə · '+total.toFixed(0)+' ₼';
+  } else {
+    el.className='fine-badge low';  el.innerHTML='⚠ '+count+' cərimə · '+total.toFixed(0)+' ₼';
+  }
+}
+
+function playFineSound(){
+  try{
+    const ctx=new (window.AudioContext||window.webkitAudioContext)();
+    [880,1100,1320].forEach(function(hz,i){
+      const osc=ctx.createOscillator(), g=ctx.createGain();
+      osc.connect(g); g.connect(ctx.destination);
+      osc.frequency.value=hz; osc.type='sine';
+      const t=ctx.currentTime+i*0.18;
+      g.gain.setValueAtTime(0,t);
+      g.gain.linearRampToValueAtTime(0.3,t+0.05);
+      g.gain.linearRampToValueAtTime(0,t+0.18);
+      osc.start(t); osc.stop(t+0.2);
+    });
+  }catch(e){}
+}
+
+function showFineNotification(plate,proto){
+  const el=document.getElementById('fineNotif');
+  const t=document.getElementById('fineNotifTitle');
+  const s=document.getElementById('fineNotifSub');
+  if(!el||!t||!s) return;
+  const parts=plate.split('-');
+  t.textContent=parts.join(' ')+' — Yeni cərimə!';
+  s.textContent=(proto.text||'')+' · '+(proto.total||proto.amount||0)+' ₼';
+  el.classList.add('show');
+  playFineSound();
+  setTimeout(function(){el.classList.remove('show');},6000);
+}
+
+async function loadAllFines(){
+  const plates=(cars||[]).map(function(c){return c.p;}).filter(Boolean);
+  for(var i=0;i<plates.length;i++){
+    var plate=plates[i];
+    try{
+      var protocols=await fetchCarFines(plate);
+      var prev=fineCache[plate];
+      if(prev){
+        var oldIds=fineSeenIds[plate]||new Set();
+        for(var j=0;j<protocols.length;j++){
+          var p=protocols[j];
+          var pid=p.protocol_number||p.id||JSON.stringify(p);
+          if(!oldIds.has(pid)){ showFineNotification(plate,p); break; }
+        }
+      }
+      fineSeenIds[plate]=new Set(protocols.map(function(p){return p.protocol_number||p.id||JSON.stringify(p);}));
+      fineCache[plate]={protocols:protocols,total:fineTotalAmount(protocols),ts:Date.now()};
+      renderFineBadge(plate,protocols);
+    }catch(e){ console.warn('Fine xəta:',plate,e.message); }
+  }
+}
+
+function renderFineSheet(plate,body,protocols){
+  if(!protocols.length){
+    body.innerHTML='<div class="fine-empty">✔ Bu avtomobil üzrə cərimə yoxdur</div>';
+    return;
+  }
+  var total=fineTotalAmount(protocols);
+  body.innerHTML=protocols.map(function(p){
+    var q=isQarali(p);
+    var amt=p.amount||0, dis=p.discount||0, fin=p.total||amt;
+    return '<div class="fine-item'+(q?' qarali':'')+'">'+
+      '<div class="fine-stag">'+(p.protocol_series||'')+(p.protocol_number||'')+'</div>'+
+      '<div class="fine-text">'+(p.text||'—')+'</div>'+
+      (p.fullname?'<div class="fine-driver">'+p.fullname+'</div>':'')+
+      '<div class="fine-amts">'+
+        '<span>Cərimə: <b>'+amt+' ₼</b></span>'+
+        (dis?'<span>Endirim: <b>-'+dis+' ₼</b></span>':'')+
+        '<span class="fine-final">Yekun: <b>'+fin+' ₼</b></span>'+
+      '</div></div>';
+  }).join('')+'<div style="padding:14px 18px;font-weight:700;font-size:15px;border-top:1px solid #eee;color:'+(total>300?'#a8362d':'#0c6b5d')+'">Cəmi: '+total.toFixed(0)+' ₼</div>';
+}
+
+function openFineModal(plate){
+  var ov=document.getElementById('fineOv');
+  var title=document.getElementById('fineShTitle');
+  var body=document.getElementById('fineShBody');
+  if(!ov||!title||!body) return;
+  var parts=plate.split('-');
+  title.textContent=parts.join(' ')+' — Cərimələr';
+  var cached=fineCache[plate];
+  if(!cached){
+    body.innerHTML='<div class="fine-empty">Yüklənir…</div>';
+    fetchCarFines(plate).then(function(protocols){
+      fineCache[plate]={protocols:protocols,total:fineTotalAmount(protocols),ts:Date.now()};
+      renderFineSheet(plate,body,protocols);
+    }).catch(function(e){ body.innerHTML='<div class="fine-empty">Xəta: '+e.message+'</div>'; });
+  } else {
+    renderFineSheet(plate,body,cached.protocols);
+  }
+  ov.classList.add('open');
+}
+
+function closeFineModal(){ var el=document.getElementById('fineOv'); if(el) el.classList.remove('open'); }
+
+setInterval(loadAllFines, 5*60*1000);
 
 document.getElementById('refresh').addEventListener('click', loadLive);
 setInterval(loadLive, AUTO_MS);
