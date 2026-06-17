@@ -1,0 +1,4 @@
+name = "noisy-voice-468f"
+main = "worker.js"
+compatibility_date = "2024-01-01"
+account_id = "ab98dc5b871a3aa38dadd7591f2ac34c"
