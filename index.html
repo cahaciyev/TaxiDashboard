@@ -168,8 +168,11 @@
     .kpis{grid-template-columns:repeat(2,1fr)}
     .kpi .big{font-size:20px}
     .vgrid{grid-template-columns:1fr 1fr}
-    .brand h1{font-size:20px}
     .atbl thead{display:none}
+    .head-in{padding:12px 0 8px;gap:10px}
+    .brand .eyebrow{font-size:10px;letter-spacing:.1em}
+    .brand h1{font-size:18px;margin-top:2px}
+    .brand .sub{font-size:11px;gap:4px;margin-top:3px;flex-wrap:nowrap;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     #gpsSeg{display:grid;grid-template-columns:1fr 1fr;gap:4px;background:transparent;padding:0;border-radius:0}
     #gpsSeg button{border-radius:8px;background:#E7ECF4;color:var(--mut);font-size:12px;padding:8px 6px;text-align:center}
     #gpsSeg button.on{background:var(--deck);color:#fff}
@@ -185,15 +188,16 @@
     .alert{padding:9px 10px}
     .panel{padding:14px}
     .wrap{padding-left:12px;padding-right:12px}
-    .brand .sub{font-size:12px;gap:5px}
   }
   @media(max-width:420px){
     .kpis{grid-template-columns:repeat(2,1fr);gap:8px}
     .kpi{padding:12px 10px}
     .kpi .big{font-size:18px}
     .vgrid{grid-template-columns:1fr}
-    .brand h1{font-size:18px}
-    .brand .eyebrow{font-size:10px}
+    .brand .eyebrow{display:none}
+    .head-in{padding:8px 0 6px}
+    .brand h1{font-size:16px;margin-top:0}
+    .brand .sub{font-size:11px;margin-top:2px}
     #gpsSeg button{font-size:11px;padding:7px 4px}
     #v-gps .kpi .big{font-size:12px!important}
     #v-gps .kpi .delta{font-size:10px}
