@@ -750,19 +750,24 @@ function gpsShowLogin(){ document.getElementById('gpsLoginBox').style.display=''
 function gpsHideLogin(){ document.getElementById('gpsLoginBox').style.display='none'; }
 
 function gpsDisconnect(){
-  gpsToken=null; localStorage.removeItem('gbToken');
+  gpsToken=null;
+  localStorage.removeItem('gbToken');
+  localStorage.removeItem('gbUser');
+  localStorage.removeItem('gbPass');
   gpsHideLogin();
-  document.getElementById('gpsConnectInfo').textContent='Bağlı deyil — demo məlumat göstərilir';
+  document.getElementById('gpsConnectInfo').textContent='Bağlı deyil — demo məlumat';
+  setGpsStatus('Daxil olun','var(--mut)');
   renderGpsStatic();
 }
 
-async function gpsLogin(){
-  const user=(document.getElementById('gpsUser').value||'').trim();
-  const pass=(document.getElementById('gpsPass').value||'').trim();
+async function gpsLogin(user, pass, silent){
+  if(!user) user=(document.getElementById('gpsUser').value||'').trim();
+  if(!pass) pass=(document.getElementById('gpsPass').value||'').trim();
   const errEl=document.getElementById('gpsLoginErr');
   const btn=document.getElementById('gpsLoginBtn');
   if(!user||!pass){errEl.textContent='İstifadəçi adı və şifrə daxil edin.';errEl.style.display='';return;}
-  btn.textContent='Gözləyin...'; btn.disabled=true; errEl.style.display='none';
+  if(!silent){btn.textContent='Gözləyin...'; btn.disabled=true;}
+  errEl.style.display='none';
   try{
     const r=await fetch(GB_LOGIN,{
       method:'POST',
@@ -775,13 +780,15 @@ async function gpsLogin(){
     gpsToken=data.token||data.accessToken||data.access_token||data.jwt||null;
     if(!gpsToken) throw new Error('Token tapılmadı: '+Object.keys(data).join(', '));
     localStorage.setItem('gbToken', gpsToken);
+    localStorage.setItem('gbUser', user);
+    localStorage.setItem('gbPass', pass);
     gpsHideLogin();
     document.getElementById('gpsConnectInfo').textContent='● Bağlı: '+user;
     await fetchGpsData();
   } catch(e){
-    errEl.textContent=e.message; errEl.style.display='';
+    if(!silent){errEl.textContent=e.message; errEl.style.display='';}
   } finally{
-    btn.textContent='Daxil ol'; btn.disabled=false;
+    if(!silent){btn.textContent='Daxil ol'; btn.disabled=false;}
   }
 }
 
@@ -886,15 +893,26 @@ document.getElementById('gpsSeg').addEventListener('click',e=>{
 const _origSwitchTabForGps = typeof switchTab === 'function' ? switchTab : null;
 
 // Init GPS on page load
-(function initGPS(){
-  if(gpsToken){
+(async function initGPS(){
+  const savedUser = localStorage.getItem('gbUser');
+  const savedPass = localStorage.getItem('gbPass');
+  renderGpsStatic();
+  if(savedUser && savedPass){
     gpsHideLogin();
-    document.getElementById('gpsConnectInfo').textContent='● Bağlı';
+    document.getElementById('gpsConnectInfo').textContent='● Bağlı: '+savedUser;
+    setGpsStatus('● Giriş edilir…','#A9BCD8');
+    if(gpsToken){
+      await fetchGpsData();
+    } else {
+      await gpsLogin(savedUser, savedPass, true);
+    }
+  } else if(gpsToken){
+    gpsHideLogin();
+    await fetchGpsData();
   } else {
     gpsShowLogin();
+    setGpsStatus('Daxil olun','var(--mut)');
   }
-  renderGpsStatic(); // show immediately, then fetch
-  if(gpsToken) fetchGpsData();
 })();
 
 // ============ RENDER ALL ============
