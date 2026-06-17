@@ -744,8 +744,13 @@ function parseMonthSheet(name, rows){
   const sum = rows.slice(1).find(
     r => r[0] && !/\d{2}-[A-Z]/.test(String(r[0])) && parseNum(r[gi]) > 0
   ) || rows[rows.length-1] || [];
+  const inc = parseNum(sum[gi]);
+  const exp = parseNum(sum[gi+1]);
+  // "Yekun" / "Xalis" sütununu axtar — olmasa Gəlir − Xərclər hesabla
+  const ni = hdr.findIndex((h,i) => i > gi+1 && h && /yekun|xalis/i.test(String(h).trim()));
+  const net = ni >= 0 ? parseNum(sum[ni]) : inc - exp;
   return {
-    mo: [label, parseNum(sum[gi]), parseNum(sum[gi+1]), parseNum(sum[gi+3])],
+    mo: [label, inc, exp, net],
     da: {label, full: name, days, rows: vrows}
   };
 }
