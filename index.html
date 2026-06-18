@@ -517,7 +517,7 @@
     <!-- Main GPS content -->
     <div id="gpsMain">
       <!-- Interval + refresh bar -->
-      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px">
         <div class="seg" id="gpsSeg">
           <button class="on" data-p="today">Bu gün</button>
           <button data-p="week">Bu həftə</button>
@@ -526,6 +526,15 @@
         </div>
         <button id="gpsRefreshBtn" onclick="fetchGpsData()" style="font:inherit;font-size:12px;font-weight:700;background:transparent;border:1px solid #d6deea;border-radius:9px;padding:6px 14px;cursor:pointer;color:var(--mut)">↻ Yenilə</button>
         <span id="gpsConnectInfo" style="font-size:12px;color:var(--mut)"></span>
+      </div>
+      <!-- Xüsusi tarix aralığı -->
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:16px">
+        <span style="font-size:12px;font-weight:700;color:var(--mut)">Tarix aralığı:</span>
+        <input type="date" id="gpsFrom" style="font:inherit;font-size:12px;font-weight:600;padding:6px 10px;border:1px solid #d6deea;border-radius:8px;background:#fff;color:var(--ink);cursor:pointer">
+        <span style="color:var(--mut);font-size:13px;font-weight:700">—</span>
+        <input type="date" id="gpsTo" style="font:inherit;font-size:12px;font-weight:600;padding:6px 10px;border:1px solid #d6deea;border-radius:8px;background:#fff;color:var(--ink);cursor:pointer">
+        <button onclick="fetchGpsRange()" style="font:inherit;font-size:12px;font-weight:700;background:var(--teal);color:#fff;border:0;border-radius:8px;padding:6px 16px;cursor:pointer">Axtar</button>
+        <span id="gpsRangeLabel" style="font-size:11px;color:var(--mut)"></span>
       </div>
 
       <!-- KPI: Active / Top / Bottom -->
@@ -890,6 +899,8 @@ const GB_DEF_T = atob('ZXlKMGVYQWlPaUpLVjFRaUxDSmhiR2NpT2lKSVV6STFOaUo5LmV5SnpkV
 let gpsToken   = localStorage.getItem('gbToken') || GB_DEF_T;
 let gpsPeriod  = 'today';
 let gpsFetching = false;
+let gpsCustomFrom = 0;
+let gpsCustomTill = 0;
 
 function fmtMin(m){
   if(!m && m!==0) return '—';
@@ -902,6 +913,7 @@ function gpsDateRange(p){
   const n=new Date();
   const ms0=(d)=>{const x=new Date(d);x.setHours(0,0,0,0);return x.getTime();};
   const ms23=(d)=>{const x=new Date(d);x.setHours(23,59,59,999);return x.getTime();};
+  if(p==='custom') return {movementAtFrom:gpsCustomFrom, movementAtTill:gpsCustomTill, query:''};
   if(p==='today'){
     return {movementAtFrom:ms0(n), movementAtTill:ms23(n), query:''};
   }
@@ -918,6 +930,28 @@ function gpsDateRange(p){
     const s=new Date(n.getFullYear(),n.getMonth(),1);
     return {movementAtFrom:ms0(s), movementAtTill:ms23(n), query:''};
   }
+}
+
+async function fetchGpsRange(){
+  const fromEl=document.getElementById('gpsFrom');
+  const toEl=document.getElementById('gpsTo');
+  if(!fromEl||!toEl||!fromEl.value||!toEl.value) return;
+  const from=new Date(fromEl.value); from.setHours(0,0,0,0);
+  const till=new Date(toEl.value);   till.setHours(23,59,59,999);
+  if(from>till){
+    const lbl=document.getElementById('gpsRangeLabel');
+    if(lbl){lbl.textContent='⚠ Başlanğıc tarix son tarixdən böyük ola bilməz';lbl.style.color='var(--red)';}
+    return;
+  }
+  gpsCustomFrom=from.getTime();
+  gpsCustomTill=till.getTime();
+  gpsPeriod='custom';
+  document.querySelectorAll('#gpsSeg button').forEach(x=>x.classList.remove('on'));
+  const pad=n=>n.toString().padStart(2,'0');
+  const fmt=d=>pad(d.getDate())+'.'+pad(d.getMonth()+1)+'.'+d.getFullYear();
+  const lbl=document.getElementById('gpsRangeLabel');
+  if(lbl){lbl.textContent=fmt(from)+' — '+fmt(till);lbl.style.color='var(--teal)';}
+  await fetchGpsData();
 }
 
 function setGpsStatus(txt, col='var(--mut)'){
@@ -1034,7 +1068,7 @@ function renderGpsData(drivers){
     const col=km>=100?'var(--teal)':km>=50?'var(--blue)':km>0?'var(--amber)':'var(--red)';
     h+=`<tr>
       <td style="padding:10px 16px"><span class="plate"><span class="az"><small>AZ</small></span><span class="pn">${plate}</span></span></td>
-      <td class="num" style="font-size:17px;font-weight:800;color:${col};transition:color .5s">${km.toFixed(2)}</td>
+      <td class="num" style="font-size:17px;font-weight:800;color:${col};transition:color .5s">${km.toFixed(2)} <small style="font-size:11px;font-weight:600;opacity:.55;color:var(--mut)">km</small></td>
       <td style="min-width:160px;padding:10px 12px">
         <div style="height:8px;background:#eef1f6;border-radius:6px;overflow:hidden;margin-bottom:3px">
           <div style="width:0%;height:100%;background:${col};border-radius:6px;transition:width .7s ease" data-w="${pct.toFixed(1)}"></div>
@@ -1068,12 +1102,14 @@ function renderGpsStatic(){
   document.getElementById('gpsNote').textContent='Demo məlumat · Canlı data üçün Geekbro-ya daxil olun';
 }
 
-// Interval segment click
+// Interval segment click — presets clear the custom range label
 document.getElementById('gpsSeg').addEventListener('click',e=>{
   const b=e.target.closest('button'); if(!b) return;
   document.querySelectorAll('#gpsSeg button').forEach(x=>x.classList.remove('on'));
   b.classList.add('on');
   gpsPeriod=b.dataset.p;
+  const lbl=document.getElementById('gpsRangeLabel');
+  if(lbl){lbl.textContent='';lbl.style.color='var(--mut)';}
   fetchGpsData();
 });
 
@@ -1084,6 +1120,11 @@ const _origSwitchTabForGps = typeof switchTab === 'function' ? switchTab : null;
 (async function initGPS(){
   gpsHideLogin();
   document.getElementById('gpsConnectInfo').textContent='● Bağlı: cavidhaciyevE';
+  // Default date inputs = today
+  const todayStr=new Date().toISOString().split('T')[0];
+  const gf=document.getElementById('gpsFrom'), gt=document.getElementById('gpsTo');
+  if(gf) gf.value=todayStr;
+  if(gt) gt.value=todayStr;
   await fetchGpsData();
 })();
 
