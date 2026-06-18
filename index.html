@@ -170,6 +170,20 @@
   .pn-sm{font-family:'JetBrains Mono',monospace;font-weight:700}
   footer{margin:34px 0 30px;text-align:center;color:var(--mut);font-size:12px}
 
+  /* ── HƏBS KARTI ── */
+  .vcard.arrested{
+    background:linear-gradient(145deg,#fff0f0,#ffe4e4)!important;
+    border:2px solid #DD5247!important;
+    box-shadow:0 0 0 3px rgba(221,82,71,.15),var(--sh)!important;
+  }
+  .arrest-banner{
+    display:flex;align-items:center;gap:7px;
+    background:linear-gradient(90deg,#DD5247,#c03030);
+    color:#fff;font-size:11px;font-weight:800;letter-spacing:.06em;
+    text-transform:uppercase;padding:7px 11px;border-radius:9px;
+    margin-bottom:10px;animation:fpulse 2s ease-in-out infinite;
+  }
+
   /* ── CƏRIMƏ SİSTEMİ ── */
   .fine-badge{display:inline-flex;align-items:center;gap:5px;border-radius:20px;
     padding:4px 9px;font-size:11px;font-weight:700;cursor:pointer;margin-top:8px;
@@ -849,7 +863,11 @@ function renderCars(f){
   document.getElementById('vgrid').innerHTML=list.map(c=>{
     const col=ownerColor[c.o]||'#6B7C93';const[a,b,d]=c.p.split('-');
     const fid='fb-'+c.p.replace(/-/g,'_');
-    return `<div class="vcard" style="cursor:pointer" onclick="openFineModal('${c.p}')">
+    const arKey=c.p.replace(/-/g,'');
+    const arInfo=arrestMap[arKey]||{};
+    const isArrested=arInfo.arrested;
+    return `<div class="vcard${isArrested?' arrested':''}" style="cursor:pointer" onclick="openFineModal('${c.p}')">
+      ${isArrested?`<div class="arrest-banner">🚔 Avtomobil həbsdədir!</div>`:''}
       <div class="vtop">
         <span class="plate"><span class="az">★<span>AZ</span></span><span class="pn">${a} ${b} ${d}</span></span>
         <span class="otag" style="color:${col};background:${col}1a">${c.o}</span></div>
@@ -1311,6 +1329,7 @@ async function loadLive(){
     renderAll();
     setStatus('● Canlı','#1E9E8F');
     loadAllFines();
+    loadArrestStatus();
   } catch(e){
     console.error('Sheets xəta:', e);
     setStatus('● Xəta: '+e.message,'#DD5247');
@@ -1322,10 +1341,29 @@ document.getElementById('refresh').addEventListener('click', loadLive);
 setInterval(loadLive, AUTO_MS);
 loadLive();
 
-// ── CƏRİMƏ API ──
+// ── CƏRİMƏ & HƏBS API ──
 const WORKER_BASE = 'https://noisy-voice-468f.cahaciyev.workers.dev';
 const fineCache   = {};
 const fineSeenIds = {};
+const arrestMap   = {}; // normPlate → {arrested:bool, description:string}
+
+async function loadArrestStatus(){
+  try{
+    const resp = await fetch(`${WORKER_BASE}/carsstatus`);
+    if(!resp.ok) return;
+    const data = await resp.json();
+    (data.data||[]).forEach(item=>{
+      // "77QJ520" → key without dashes
+      const key = (item.car_number||'').replace(/-/g,'');
+      arrestMap[key] = {
+        arrested: item.arrest === 1 || item.has_arrest === 'Var',
+        description: item.arrest_description || false,
+        has_arrest: item.has_arrest || 'Yoxdur'
+      };
+    });
+    renderCars(curOwner);
+  }catch(e){ console.warn('Arrest status xəta:', e.message); }
+}
 
 function carNumForAPI(plate){ return plate.replace(/-/g,''); }
 
