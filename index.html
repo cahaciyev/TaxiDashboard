@@ -879,7 +879,7 @@ function renderCars(f){
       <div class="vfoot"><div>Gəlir<b class="num">${fmt(c.inc)} ₼</b></div>
         <div>Xərc<b class="num">${fmt(c.exp)} ₼</b></div>
         <div style="text-align:right">Qiymət<b class="num">${fmt(c.price)} ₼</b></div></div>
-      <div id="${fid}" class="fine-badge loading">⏳ Cərimə yoxlanılır…</div>
+      <div id="${fid}" class="fine-badge" style="display:none"></div>
     </div>`;
   }).join('');
 }
@@ -1353,7 +1353,6 @@ async function loadArrestStatus(){
     if(!resp.ok) return;
     const data = await resp.json();
     (data.data||[]).forEach(item=>{
-      // "77QJ520" → key without dashes
       const key = (item.car_number||'').replace(/-/g,'');
       arrestMap[key] = {
         arrested: item.arrest === 1 || item.has_arrest === 'Var',
@@ -1361,7 +1360,27 @@ async function loadArrestStatus(){
         has_arrest: item.has_arrest || 'Yoxdur'
       };
     });
-    renderCars(curOwner);
+    // Kartları yerindəcə yenilə — renderCars çağırma (badge-ləri sıfırlamasın)
+    (cars||[]).forEach(c=>{
+      const badgeEl = document.getElementById('fb-'+c.p.replace(/-/g,'_'));
+      if(!badgeEl) return;
+      const cardEl = badgeEl.closest('.vcard');
+      if(!cardEl) return;
+      const arKey = c.p.replace(/-/g,'');
+      const isArrested = (arrestMap[arKey]||{}).arrested;
+      if(isArrested){
+        cardEl.classList.add('arrested');
+        if(!cardEl.querySelector('.arrest-banner')){
+          const b = document.createElement('div');
+          b.className = 'arrest-banner';
+          b.innerHTML = '🚔 Avtomobil həbsdədir!';
+          cardEl.insertBefore(b, cardEl.firstChild);
+        }
+      } else {
+        cardEl.classList.remove('arrested');
+        cardEl.querySelector('.arrest-banner')?.remove();
+      }
+    });
   }catch(e){ console.warn('Arrest status xəta:', e.message); }
 }
 
@@ -1392,6 +1411,7 @@ function renderFineBadge(plate, protocols){
   if(!el) return;
   const total = fineTotalAmount(protocols);
   const count = protocols.length;
+  el.style.display = '';
   if(!count){
     el.className='fine-badge none'; el.innerHTML='✔ Cərimə yoxdur';
   } else if(total>300){
