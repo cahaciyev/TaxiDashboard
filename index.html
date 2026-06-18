@@ -858,6 +858,7 @@ function renderDaily(){
 
 // ============ CARS ============
 let curOwner='all';
+const arrestMap = {}; // normPlate → {arrested:bool} — loadArrestStatus tərəfindən doldurulur
 function renderCars(f){
   curOwner=f;const list=f==='all'?cars:cars.filter(c=>c.o===f);
   document.getElementById('vgrid').innerHTML=list.map(c=>{
@@ -1345,7 +1346,6 @@ loadLive();
 const WORKER_BASE = 'https://noisy-voice-468f.cahaciyev.workers.dev';
 const fineCache   = {};
 const fineSeenIds = {};
-const arrestMap   = {}; // normPlate → {arrested:bool, description:string}
 
 async function loadArrestStatus(){
   try{
