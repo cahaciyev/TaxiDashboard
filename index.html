@@ -1371,7 +1371,13 @@ function fineTotalAmount(protocols){
   return protocols.reduce((s,p) => s+(parseFloat(p.total)||parseFloat(p.amount)||0), 0);
 }
 
-function isQarali(p){ return (p.text||'').toLowerCase().includes('qərarlı'); }
+function isQarali(p){
+  return p.has_decision === true ||
+    (p.status?.text || p.text || '').toLowerCase().includes('qərarlı');
+}
+function statusText(p){
+  return p.status?.text || (p.has_decision ? 'Qərarlı' : 'Qərarsız');
+}
 
 async function fetchCarFines(plate){
   const num  = carNumForAPI(plate);
@@ -1452,17 +1458,24 @@ function renderFineSheet(plate,body,protocols){
   const total=fineTotalAmount(protocols);
   body.innerHTML=protocols.map(p=>{
     const q=isQarali(p);
+    const st=statusText(p);
     const amt=p.amount||0, dis=p.discount||0, fin=p.total||amt;
-    return `<div class="fine-item${q?' qarali':''}">
-      <div class="fine-stag">${p.protocol_series||''}${p.protocol_number||''}</div>
-      <div class="fine-text">${p.text||'—'}</div>
-      ${p.fullname?`<div class="fine-driver">${p.fullname}</div>`:''}
+    const desc=p.law_item||p.text||'—';
+    const date=(p.action_date||'').split(' ')[0];
+    return `<div class="fine-item${q?' qarali':' pending'}">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:7px;flex-wrap:wrap">
+        <span class="fine-proto">${p.protocol_series||''}${p.protocol_number||''}</span>
+        <span class="fine-stag ${q?'qarali':'pending'}">${st}</span>
+      </div>
+      <div class="fine-text">${desc}</div>
+      ${p.fullname?`<div class="fine-driver">👤 ${p.fullname}</div>`:''}
+      ${date?`<div class="fine-driver">📅 ${date}${p.address?' · '+p.address.substring(0,55)+'…':''}</div>`:''}
       <div class="fine-amts">
-        <span>Cərimə: <b>${amt} ₼</b></span>
-        ${dis?`<span>Endirim: <b>-${dis} ₼</b></span>`:''}
-        <span class="fine-final">Yekun: <b>${fin} ₼</b></span>
+        <span class="fa-amt">Cərimə: <b>${amt} ₼</b></span>
+        ${dis?`<span class="fa-dis">Endirim: <b>-${dis} ₼</b></span>`:''}
+        <span class="fa-tot">Yekun: <b>${fin} ₼</b></span>
       </div></div>`;
-  }).join('')+`<div class="fine-total${total>300?' red':''}" style="padding:14px 18px;font-weight:700;font-size:15px;border-top:1px solid #eee;color:${total>300?'#a8362d':'#0c6b5d'}">Cəmi: ${total.toFixed(0)} ₼</div>`;
+  }).join('')+`<div style="padding:14px 18px;font-weight:700;font-size:15px;border-top:1px solid #eef1f6;color:${total>300?'#a8362d':'#0c6b5d'}">Cəmi: ${total.toFixed(0)} ₼</div>`;
 }
 
 function openFineModal(plate){
