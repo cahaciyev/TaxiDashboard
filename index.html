@@ -685,6 +685,8 @@ let daily = [
 ];
 // ── ÖDƏNİŞ OVERRIDE SİSTEMİ ──
 let dailyOverrides = JSON.parse(localStorage.getItem('dailyOverrides')||'{}');
+let dailyOvTimes   = JSON.parse(localStorage.getItem('dailyOvTimes')||'{}');
+function fmtTime(ts){ if(!ts) return ''; const d=new Date(ts),p=n=>String(n).padStart(2,'0'); return p(d.getDate())+'.'+p(d.getMonth()+1)+'.'+d.getFullYear()+' '+p(d.getHours())+':'+p(d.getMinutes()); }
 function ovKey(mFull,plate,di){ return mFull+'|'+plate+'|'+di; }
 function getEffVal(mFull,plate,di,orig){
   const k=ovKey(mFull,plate,di);
@@ -706,7 +708,8 @@ function ceOpen(el,mFull,plate,di,orig){
   if(top+ed.offsetHeight>window.innerHeight) top=p.top-ed.offsetHeight-6;
   ed.style.left=left+'px'; ed.style.top=top+'px';
   const [a,b,c]=plate.split('-');
-  document.getElementById('ceTitle').textContent=`${a}-${b}-${c} · ${mFull} · ${di+1}-ci gün`;
+  const ts=dailyOvTimes[ovKey(mFull,plate,di)];
+  document.getElementById('ceTitle').textContent=`${a}-${b}-${c} · ${mFull} · ${di+1}-ci gün`+(ts?` · ${fmtTime(ts)}`:'');
   const inp=document.getElementById('ceInput');
   inp.value=(eff===''||eff===null||eff===undefined)?String(DEFAULT_PAY):String(eff);
   inp.focus();inp.select();
@@ -725,14 +728,18 @@ function ceSave(){
   else { const n=Number(raw); val=isNaN(n)?raw:n; }
   const k=ovKey(_ce.mFull,_ce.plate,_ce.di);
   dailyOverrides[k]=val;
+  dailyOvTimes[k]=Date.now();
   localStorage.setItem('dailyOverrides',JSON.stringify(dailyOverrides));
+  localStorage.setItem('dailyOvTimes',JSON.stringify(dailyOvTimes));
   gsWrite(_ce.mFull,_ce.plate,_ce.di,val);
   ceClose(); renderDaily(); renderAll();
 }
 function ceReset(){
   const k=ovKey(_ce.mFull,_ce.plate,_ce.di);
   delete dailyOverrides[k];
+  delete dailyOvTimes[k];
   localStorage.setItem('dailyOverrides',JSON.stringify(dailyOverrides));
+  localStorage.setItem('dailyOvTimes',JSON.stringify(dailyOvTimes));
   ceClose(); renderDaily(); renderAll();
 }
 
@@ -986,7 +993,9 @@ function renderDaily(){
       const n=(typeof v==='number')?v:(+v||0);
       if(typeof v==='number'||(!isNaN(+v)&&v!=='')){rowTot+=n;dayTot[i]+=n;}
       const disp=v===''?'':v;
-      html+=`<td class="cell ${dayClass(v)}${isOv?' ov':''}" onclick="ceOpen(this,'${m.full}','${row.p}',${i},'${orig}')" title="${isOv?'Dəyişdirilib — sıfırlamaq üçün Sıfırla düyməsini basın':'Klik edib dəyər daxil edin'}">${disp}</td>`;
+      const ts=dailyOvTimes[ovKey(m.full,row.p,i)];
+      const tip=isOv?`Dəyişdirilib: ${fmtTime(ts)}`:'Klik edib dəyər daxil edin';
+      html+=`<td class="cell ${dayClass(v)}${isOv?' ov':''}" onclick="ceOpen(this,'${m.full}','${row.p}',${i},'${orig}')" title="${tip}">${disp}</td>`;
     });
     html+=`<td class="tot num">${fmt(rowTot)}</td></tr>`;
   });
