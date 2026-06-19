@@ -1879,32 +1879,6 @@ document.addEventListener('click',_unlockAudio,{once:true,passive:true});
   draw();
 })();
 
-// Apple-touch-icon (iPhone "Add to Home Screen")
-(function(){
-  const C=document.createElement('canvas'); C.width=C.height=180;
-  const x=C.getContext('2d');
-  // Background
-  x.beginPath(); x.roundRect(0,0,180,180,36); x.fillStyle='#0F1C30'; x.fill();
-  // Car body
-  x.fillStyle='#F5C518';
-  x.beginPath(); x.roundRect(22,102,136,54,12); x.fill();
-  // Roof
-  x.beginPath(); x.moveTo(44,102); x.lineTo(59,52); x.lineTo(121,52); x.lineTo(136,102); x.closePath(); x.fill();
-  // Taxi sign (white bar on roof)
-  x.fillStyle='#fff'; x.beginPath(); x.roundRect(66,38,48,16,5); x.fill();
-  // Windshield
-  x.fillStyle='rgba(15,28,48,.58)';
-  x.beginPath(); x.moveTo(60,102); x.lineTo(68,66); x.lineTo(112,66); x.lineTo(120,102); x.closePath(); x.fill();
-  // Wheels
-  x.fillStyle='#162A45';
-  [50,130].forEach(w=>{x.beginPath();x.arc(w,156,17,0,Math.PI*2);x.fill();});
-  // Wheel shine
-  x.fillStyle='rgba(255,255,255,.15)';
-  [50,130].forEach(w=>{x.beginPath();x.arc(w,153,7,0,Math.PI*2);x.fill();});
-  const L=document.createElement('link');
-  L.rel='apple-touch-icon'; L.sizes='180x180'; L.href=C.toDataURL();
-  document.head.appendChild(L);
-})();
 </script>
 
 
