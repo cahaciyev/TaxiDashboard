@@ -1464,6 +1464,7 @@ function switchTab(v){
   document.querySelectorAll('.view').forEach(s=>s.classList.remove('on'));
   const view=document.getElementById('v-'+v);
   if(view) view.classList.add('on');
+  document.getElementById('banner').style.display = v === 'ov' ? '' : 'none';
   if(v==='gps') fetchGpsData();
   if(v==='avto'){
     alertsLastSeenCount=buildAlerts().filter(a=>a.sev==='crit').length;
