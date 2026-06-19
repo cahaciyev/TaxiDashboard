@@ -1101,6 +1101,11 @@ function renderCars(f){
       <div id="${fid}" class="fine-badge" style="display:none"></div>
     </div>`;
   }).join('');
+  // Keşlənmiş cərimələri yenidən tətbiq et (filtr dəyişəndə badge-lər silinməsin)
+  list.forEach(c=>{
+    const cached=fineCache[c.p];
+    if(cached && cached.protocols) renderFineBadge(c.p,cached.protocols);
+  });
 }
 
 // ============ AVTO TABLE ============
