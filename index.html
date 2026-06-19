@@ -128,7 +128,8 @@
     z-index:2;border-right:2px solid #c8d4e6}
   table.daily td.cell{width:38px;height:36px;font-weight:600;font-size:12.5px;letter-spacing:-.01em;cursor:pointer;transition:filter .1s;touch-action:manipulation}
   table.daily td.cell:hover{filter:brightness(.92)}
-  table.daily td.cell.ov{outline:2px solid var(--teal);outline-offset:-2px}
+  table.daily td.cell.ov::after{content:'';position:absolute;top:2px;right:2px;width:4px;height:4px;border-radius:50%;background:var(--teal);pointer-events:none}
+  table.daily td.cell{position:relative}
 
   #ceOverlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9998;-webkit-tap-highlight-color:transparent}
   #cellEditor{display:none;position:fixed;z-index:9999;background:#fff;border-radius:14px;
