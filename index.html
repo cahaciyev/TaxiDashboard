@@ -5,6 +5,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Avtopark">
 <title>Avtopark — İnteraktiv Dashboard</title>
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%230F1C30'/><rect x='8' y='37' width='48' height='19' rx='4' fill='%23F5C518'/><path d='M16 37L21 19h22l5 18z' fill='%23F5C518'/><rect x='26' y='13' width='12' height='8' rx='2' fill='white'/><path d='M22 37l4-13h12l4 13z' fill='%230F1C30' opacity='.55'/><circle cx='20' cy='56' r='6' fill='%23162A45'/><circle cx='44' cy='56' r='6' fill='%23162A45'/></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1049,6 +1050,24 @@ function renderDaily(){
   const total=dayTot.reduce((s,x)=>s+x,0);
   const ovCount=Object.keys(dailyOverrides).filter(k=>k.startsWith(m.full+'|')).length;
   document.getElementById('dailyNote').textContent=`${m.full}: ümumi günlük ödənişlər ${fmt(total)} ₼ · "i" işləmədiyi günlər, "t" təmir, "0" ödəniş daxil edilməyib.`+(ovCount?` · ${ovCount} xana lokal olaraq dəyişdirilib`:'');
+  // Mobil: cari günə scroll et
+  if(window.innerWidth<=640){
+    setTimeout(()=>{
+      const ds=document.querySelector('.dscroll');
+      if(!ds) return;
+      // Cari ay üçün bu günə, digər aylar üçün sona scroll et
+      const parts=(m.full||'').split(' ');
+      const mo=AZ_MON[parts[0]],yr=parseInt(parts[1]);
+      const isCurrentMonth=mo&&yr&&TODAY.getMonth()+1===mo&&TODAY.getFullYear()===yr;
+      if(isCurrentMonth){
+        const dayIdx=TODAY.getDate()-1;
+        const cells=ds.querySelectorAll('tbody tr:first-child td.cell');
+        if(cells[dayIdx]) cells[dayIdx].scrollIntoView({inline:'center',block:'nearest'});
+      } else {
+        ds.scrollLeft=ds.scrollWidth;
+      }
+    },80);
+  }
 }
 
 // ============ CARS ============
