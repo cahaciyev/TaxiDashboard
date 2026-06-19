@@ -1038,18 +1038,22 @@ function draw(k){
 function dayClass(v){ if(v===""||v===null) return 'cE'; if(v==='i'||v==='İ') return 'cI';
   if(String(v).toLowerCase()==='t') return 'cT'; const n=+v; if(n===0) return 'cZ'; if(n>=200) return 'cBig'; return 'cP'; }
 const DEFAULT_PAY = 30;
+// Plaka uyğunsuzluğu: HESABAT vərəqində 77-SP-437, ay vərəqlərində 77-SN-437 — eyni maşın
+const PLATE_ALIAS={'77-SP-437':'77-SN-437'};
+function aliasPlate(p){ return PLATE_ALIAS[p]||p; }
 // Bir maşının seçilmiş ay üzrə günlük cəmi (override-lar nəzərə alınır)
 function plateDailySum(m, plate){
-  const row=m.rows.find(r=>r.p===plate);
+  const ap=aliasPlate(plate);
+  const row=m.rows.find(r=>aliasPlate(r.p)===ap);
   if(!row) return 0;
   let sum=0;
   row.vals.forEach((orig,i)=>{
-    const v=getEffVal(m.full,plate,i,orig);
+    const v=getEffVal(m.full,row.p,i,orig);
     if(typeof v==='number'||(!isNaN(+v)&&v!=='')) sum+=(+v||0);
   });
   return sum;
 }
-function ownerOf(plate){ const c=(cars||[]).find(x=>x.p===plate); return c?c.o:'Digər'; }
+function ownerOf(plate){ const ap=aliasPlate(plate); const c=(cars||[]).find(x=>aliasPlate(x.p)===ap); return c?c.o:'Digər'; }
 // Seçilmiş ay üzrə hər sahibin günlük cəmi
 function ownerDailySums(m){
   const sums={};
