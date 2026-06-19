@@ -143,6 +143,7 @@
   .ceq-i{background:#fef0d6;color:#8a5a08;border-color:#fde0a0!important}
   .ceq-t{background:#ede9fd;color:#5038b0;border-color:#ddd6fe!important}
   .ceq-0{background:#fde8e6;color:#9e2e25;border-color:#fcc!important}
+  .ceq-35{background:#e2f5ee;color:#0a5e50;border-color:#b4e4d4!important;font-size:13px!important}
   #cellEditor .ce-btns{display:flex;gap:7px;margin-top:10px}
   #cellEditor .ce-save{flex:1;font:inherit;font-size:13px;font-weight:700;padding:8px;
     border-radius:8px;border:0;background:var(--teal);color:#fff;cursor:pointer}
@@ -512,9 +513,10 @@
     <div class="ce-title" id="ceTitle">Ödəniş daxil et</div>
     <input id="ceInput" type="number" min="0" step="1" placeholder="30" />
     <div class="ce-quick">
-      <button class="ceq-i" onclick="ceSetSpecial('i')">İ — istirahət</button>
-      <button class="ceq-t" onclick="ceSetSpecial('t')">T — təmir</button>
-      <button class="ceq-0" onclick="ceSetSpecial(0)">0 — ödəymədi</button>
+      <button class="ceq-35" onclick="ceSetSpecial(35)">35 ₼</button>
+      <button class="ceq-i" onclick="ceSetSpecial('i')">İ</button>
+      <button class="ceq-t" onclick="ceSetSpecial('t')">T</button>
+      <button class="ceq-0" onclick="ceSetSpecial(0)">0</button>
     </div>
     <div class="ce-btns">
       <button class="ce-save" onclick="ceSave()">Saxla</button>
@@ -708,8 +710,8 @@ function ceOpen(el,mFull,plate,di,orig){
 }
 function ceClose(){ document.getElementById('cellEditor').style.display='none'; }
 function ceSetSpecial(v){
-  const inp=document.getElementById('ceInput');
-  inp.value=String(v);
+  document.getElementById('ceInput').value=String(v);
+  ceSave();
 }
 function ceSave(){
   const raw=document.getElementById('ceInput').value.trim();
