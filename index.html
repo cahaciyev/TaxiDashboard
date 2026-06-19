@@ -126,12 +126,14 @@
   table.daily thead th.plate{
     background:linear-gradient(to bottom,#f0f4fa,#e8eef6);
     z-index:2;border-right:2px solid #c8d4e6}
-  table.daily td.cell{width:38px;height:36px;font-weight:600;font-size:12.5px;letter-spacing:-.01em;cursor:pointer;transition:filter .1s}
+  table.daily td.cell{width:38px;height:36px;font-weight:600;font-size:12.5px;letter-spacing:-.01em;cursor:pointer;transition:filter .1s;touch-action:manipulation}
   table.daily td.cell:hover{filter:brightness(.92)}
   table.daily td.cell.ov{outline:2px solid var(--teal);outline-offset:-2px}
 
+  #ceOverlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9998;-webkit-tap-highlight-color:transparent}
   #cellEditor{display:none;position:fixed;z-index:9999;background:#fff;border-radius:14px;
     box-shadow:0 12px 40px rgba(15,28,48,.22);border:1px solid #d0daea;padding:16px;width:220px}
+  #cellEditor .ce-drag{display:none}
   #cellEditor .ce-title{font-size:11px;font-weight:700;color:var(--mut);text-transform:uppercase;
     letter-spacing:.06em;margin-bottom:10px}
   #cellEditor input{width:100%;font:inherit;font-size:22px;font-weight:800;padding:8px 10px;
@@ -139,19 +141,35 @@
   #cellEditor input:focus{border-color:var(--teal)}
   #cellEditor .ce-quick{display:flex;gap:5px;margin-top:9px}
   #cellEditor .ce-quick button{flex:1;font:inherit;font-size:11px;font-weight:700;padding:6px 4px;
-    border-radius:7px;cursor:pointer;border:1px solid}
+    border-radius:7px;cursor:pointer;border:1px solid;touch-action:manipulation}
   .ceq-i{background:#fef0d6;color:#8a5a08;border-color:#fde0a0!important}
   .ceq-t{background:#ede9fd;color:#5038b0;border-color:#ddd6fe!important}
   .ceq-0{background:#fde8e6;color:#9e2e25;border-color:#fcc!important}
   .ceq-35{background:#e2f5ee;color:#0a5e50;border-color:#b4e4d4!important;font-size:13px!important}
   #cellEditor .ce-btns{display:flex;gap:7px;margin-top:10px}
   #cellEditor .ce-save{flex:1;font:inherit;font-size:13px;font-weight:700;padding:8px;
-    border-radius:8px;border:0;background:var(--teal);color:#fff;cursor:pointer}
+    border-radius:8px;border:0;background:var(--teal);color:#fff;cursor:pointer;touch-action:manipulation}
   #cellEditor .ce-save:hover{background:#178a7d}
   #cellEditor .ce-reset{font:inherit;font-size:12px;font-weight:600;padding:8px 9px;
-    border-radius:8px;border:1px solid #e0e6f0;background:#f5f7fb;color:var(--mut);cursor:pointer}
+    border-radius:8px;border:1px solid #e0e6f0;background:#f5f7fb;color:var(--mut);cursor:pointer;touch-action:manipulation}
   #cellEditor .ce-close{font:inherit;font-size:12px;font-weight:600;padding:8px 9px;
-    border-radius:8px;border:1px solid #e0e6f0;background:#f5f7fb;color:var(--mut);cursor:pointer}
+    border-radius:8px;border:1px solid #e0e6f0;background:#f5f7fb;color:var(--mut);cursor:pointer;touch-action:manipulation}
+  @media(max-width:640px){
+    #cellEditor{position:fixed!important;bottom:0!important;left:0!important;right:0!important;
+      top:auto!important;width:100%!important;border-radius:20px 20px 0 0;border-bottom:0;
+      padding:12px 20px calc(28px + env(safe-area-inset-bottom));
+      transform:translateY(105%);transition:transform .26s cubic-bezier(.4,0,.2,1)}
+    #cellEditor.ce-open{transform:translateY(0)}
+    #cellEditor .ce-drag{display:block;width:40px;height:4px;background:#d0daea;border-radius:2px;margin:0 auto 14px}
+    #cellEditor .ce-title{font-size:12px;text-align:center}
+    #cellEditor input{font-size:30px;padding:14px 10px;border-radius:12px}
+    #cellEditor .ce-quick{gap:10px;margin-top:14px}
+    #cellEditor .ce-quick button{padding:16px 4px;font-size:14px;border-radius:12px}
+    .ceq-35{font-size:15px!important}
+    #cellEditor .ce-btns{gap:10px;margin-top:14px}
+    #cellEditor .ce-save{padding:16px;font-size:16px;border-radius:12px}
+    #cellEditor .ce-reset,#cellEditor .ce-close{padding:16px 14px;font-size:14px;border-radius:12px}
+  }
   table.daily td.tot{
     font-weight:800;background:#f0f5fb;min-width:72px;
     color:#16304f;font-size:13.5px;border-left:2px solid #c8d4e6}
@@ -512,7 +530,9 @@
   </section>
 
   <!-- CELL EDITOR POPUP -->
+  <div id="ceOverlay" onclick="ceClose()"></div>
   <div id="cellEditor">
+    <div class="ce-drag"></div>
     <div class="ce-title" id="ceTitle">Ödəniş daxil et</div>
     <input id="ceInput" type="text" inputmode="decimal" placeholder="30" />
     <div class="ce-quick">
@@ -702,25 +722,43 @@ function hasOv(mFull,plate,di){ return ovKey(mFull,plate,di) in dailyOverrides; 
 
 // ── CELL EDITOR ──
 let _ce={mFull:'',plate:'',di:0,orig:''};
+const isMobile=()=>window.innerWidth<=640;
 function ceOpen(el,mFull,plate,di,orig){
   _ce={mFull,plate,di,orig};
   const eff=getEffVal(mFull,plate,di,orig);
-  const p=el.getBoundingClientRect();
   const ed=document.getElementById('cellEditor');
-  ed.style.display='block';
-  let left=p.left, top=p.bottom+6;
-  if(left+224>window.innerWidth) left=window.innerWidth-228;
-  if(left<4) left=4;
-  if(top+ed.offsetHeight>window.innerHeight) top=p.top-ed.offsetHeight-6;
-  ed.style.left=left+'px'; ed.style.top=top+'px';
+  const ov=document.getElementById('ceOverlay');
   const [a,b,c]=plate.split('-');
   const ts=dailyOvTimes[ovKey(mFull,plate,di)];
-  document.getElementById('ceTitle').textContent=`${a}-${b}-${c} · ${mFull} · ${di+1}-ci gün`+(ts?` · ${fmtTime(ts)}`:'');
+  document.getElementById('ceTitle').textContent=`${a}-${b}-${c} · ${mFull} · ${di+1}-ci gün`+(ts?`\n${fmtTime(ts)}`:'');
   const inp=document.getElementById('ceInput');
   inp.value=(eff===''||eff===null||eff===undefined)?String(DEFAULT_PAY):String(eff);
-  inp.focus();inp.select();
+  if(isMobile()){
+    ed.style.display='block'; ov.style.display='block';
+    requestAnimationFrame(()=>requestAnimationFrame(()=>ed.classList.add('ce-open')));
+    setTimeout(()=>{ inp.focus(); inp.select(); }, 300);
+  } else {
+    ed.style.display='block';
+    const p=el.getBoundingClientRect();
+    let left=p.left, top=p.bottom+6;
+    if(left+224>window.innerWidth) left=window.innerWidth-228;
+    if(left<4) left=4;
+    if(top+ed.offsetHeight>window.innerHeight) top=p.top-ed.offsetHeight-6;
+    ed.style.left=left+'px'; ed.style.top=top+'px';
+    inp.focus(); inp.select();
+  }
 }
-function ceClose(){ document.getElementById('cellEditor').style.display='none'; }
+function ceClose(){
+  const ed=document.getElementById('cellEditor');
+  const ov=document.getElementById('ceOverlay');
+  if(isMobile()){
+    ed.classList.remove('ce-open');
+    ov.style.display='none';
+    setTimeout(()=>{ ed.style.display='none'; },270);
+  } else {
+    ed.style.display='none';
+  }
+}
 function ceSetSpecial(v){
   document.getElementById('ceInput').value=String(v);
   ceSave();
