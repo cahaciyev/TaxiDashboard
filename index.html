@@ -1882,4 +1882,61 @@ document.addEventListener('click',_unlockAudio,{once:true,passive:true});
 
 </script>
 
-
+<script>
+// Apple-touch-icon — canlı taksi ikonu
+(function(){
+  const S=512, C=document.createElement('canvas');
+  C.width=C.height=S;
+  const x=C.getContext('2d');
+  // Fon gradient
+  const bg=x.createLinearGradient(0,0,S,S);
+  bg.addColorStop(0,'#0D1F3C'); bg.addColorStop(1,'#0A3D52');
+  x.beginPath(); x.roundRect(0,0,S,S,90); x.fillStyle=bg; x.fill();
+  // Yol
+  x.fillStyle='#091929'; x.fillRect(0,390,S,122);
+  x.fillStyle='#F5C518';
+  for(let i=0;i<5;i++) x.fillRect(40+i*110,430,60,14);
+  // Taksi gövdəsi
+  x.shadowColor='rgba(0,0,0,.5)'; x.shadowBlur=30; x.shadowOffsetY=12;
+  x.fillStyle='#F7C430';
+  x.beginPath(); x.roundRect(62,270,388,150,[0,0,26,26]); x.fill();
+  x.beginPath(); x.moveTo(130,270); x.lineTo(155,150); x.lineTo(357,150); x.lineTo(382,270); x.closePath(); x.fill();
+  x.shadowColor='transparent';
+  // Pəncərələr
+  x.fillStyle='#B8E4F9';
+  x.beginPath(); x.moveTo(148,265); x.lineTo(165,165); x.lineTo(237,165); x.lineTo(237,265); x.closePath(); x.fill();
+  x.beginPath(); x.moveTo(275,265); x.lineTo(275,165); x.lineTo(347,165); x.lineTo(364,265); x.closePath(); x.fill();
+  x.fillStyle='rgba(255,255,255,.35)';
+  x.beginPath(); x.moveTo(152,255); x.lineTo(168,172); x.lineTo(195,172); x.lineTo(185,255); x.closePath(); x.fill();
+  x.fillStyle='#F7C430'; x.fillRect(250,155,14,115);
+  // TAXI nişanı
+  x.fillStyle='#fff'; x.beginPath(); x.roundRect(190,120,132,38,10); x.fill();
+  x.fillStyle='#1a1a1a'; x.font='bold 22px Arial'; x.textAlign='center'; x.fillText('TAXI',256,146);
+  // Təkərlər
+  const dw=(cx,cy)=>{
+    x.shadowColor='rgba(0,0,0,.6)'; x.shadowBlur=18;
+    x.fillStyle='#1A1A2E'; x.beginPath(); x.arc(cx,cy,52,0,Math.PI*2); x.fill();
+    x.shadowColor='transparent';
+    x.fillStyle='#3A3A5C'; x.beginPath(); x.arc(cx,cy,34,0,Math.PI*2); x.fill();
+    x.fillStyle='#F7C430'; x.beginPath(); x.arc(cx,cy,14,0,Math.PI*2); x.fill();
+    x.strokeStyle='rgba(255,255,255,.15)'; x.lineWidth=4;
+    x.beginPath(); x.arc(cx,cy,46,0,Math.PI*2); x.stroke();
+  };
+  dw(148,400); dw(364,400);
+  // Qapı
+  x.strokeStyle='#D4A017'; x.lineWidth=3;
+  x.beginPath(); x.moveTo(256,270); x.lineTo(256,390); x.stroke();
+  x.fillStyle='#D4A017';
+  x.beginPath(); x.roundRect(215,320,32,9,4); x.fill();
+  x.beginPath(); x.roundRect(265,320,32,9,4); x.fill();
+  // Faralar
+  const hl=x.createRadialGradient(440,310,2,440,310,40);
+  hl.addColorStop(0,'#FFFDE0'); hl.addColorStop(1,'transparent');
+  x.fillStyle=hl; x.beginPath(); x.ellipse(440,312,36,22,0,0,Math.PI*2); x.fill();
+  x.fillStyle='#FF4444'; x.beginPath(); x.roundRect(62,305,22,40,6); x.fill();
+  // Link tag-a yaz
+  const existing=document.querySelector('link[rel="apple-touch-icon"]');
+  if(existing){ existing.href=C.toDataURL(); }
+  else { const L=document.createElement('link'); L.rel='apple-touch-icon'; L.href=C.toDataURL(); document.head.appendChild(L); }
+})();
+</script>
