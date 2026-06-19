@@ -494,7 +494,10 @@
     <div class="panel">
       <div class="sec-h">
         <h2>Günlük ödənişlər</h2>
-        <div class="ctrl"><label class="hint">Ay:</label><select id="monthSel"></select></div>
+        <div class="ctrl"><label class="hint">Ay:</label><select id="monthSel"></select>
+          <button onclick="gsSetup()" id="gsSyncBtn" title="Google Sheets sinxronizasiya ayarları" style="border:1px solid #d0daea;background:#f5f8fd;border-radius:8px;padding:5px 11px;font:inherit;font-size:12px;font-weight:700;cursor:pointer;color:var(--mut)">⚙ Sheets</button>
+          <span id="gsSyncStatus" style="font-size:12px;font-weight:600;display:none"></span>
+        </div>
       </div>
       <div class="legend">
         <span><i class="cP"></i> Ödəniş</span><span><i class="cI"></i> İşləmədi (i)</span>
@@ -723,6 +726,7 @@ function ceSave(){
   const k=ovKey(_ce.mFull,_ce.plate,_ce.di);
   dailyOverrides[k]=val;
   localStorage.setItem('dailyOverrides',JSON.stringify(dailyOverrides));
+  gsWrite(_ce.mFull,_ce.plate,_ce.di,val);
   ceClose(); renderDaily(); renderAll();
 }
 function ceReset(){
@@ -731,6 +735,37 @@ function ceReset(){
   localStorage.setItem('dailyOverrides',JSON.stringify(dailyOverrides));
   ceClose(); renderDaily(); renderAll();
 }
+
+// ── GOOGLE SHEETS WRITE ──
+let gsUrl = localStorage.getItem('gsUrl') || '';
+function gsWrite(mFull, plate, di, val){
+  if(!gsUrl) return;
+  const st=document.getElementById('gsSyncStatus');
+  st.style.display='inline'; st.style.color='var(--mut)'; st.textContent='↑ yazılır…';
+  fetch(gsUrl,{
+    method:'POST', mode:'no-cors',
+    body: new URLSearchParams({sheet:mFull, plate, di:String(di), val:String(val)})
+  }).then(()=>{
+    st.style.color='var(--teal)'; st.textContent='✓ yazıldı';
+    setTimeout(()=>st.style.display='none', 2500);
+  }).catch(()=>{
+    st.style.color='var(--red)'; st.textContent='✗ xəta';
+    setTimeout(()=>st.style.display='none', 3000);
+  });
+}
+function gsSetup(){
+  const u=prompt('Google Apps Script Web App URL-ni yapışdırın\n(boş buraxsanız sinxronizasiya söndürülür):', gsUrl);
+  if(u===null) return;
+  gsUrl=u.trim();
+  localStorage.setItem('gsUrl', gsUrl);
+  const btn=document.getElementById('gsSyncBtn');
+  btn.style.color = gsUrl ? 'var(--teal)' : 'var(--mut)';
+  btn.textContent = gsUrl ? '⚙ Sheets ✓' : '⚙ Sheets';
+  if(gsUrl) alert('Qeydə alındı! İndi dəyişikliklər Google Sheets-ə yazılacaq.');
+}
+document.addEventListener('DOMContentLoaded',()=>{
+  if(gsUrl){ const b=document.getElementById('gsSyncBtn'); if(b){b.style.color='var(--teal)';b.textContent='⚙ Sheets ✓';} }
+});
 document.addEventListener('keydown',e=>{ if(e.key==='Escape') ceClose(); if(e.key==='Enter'&&document.getElementById('cellEditor').style.display!=='none') ceSave(); });
 document.addEventListener('mousedown',e=>{ const ed=document.getElementById('cellEditor'); if(ed.style.display!=='none'&&!ed.contains(e.target)&&!e.target.classList.contains('cell')) ceClose(); });
 
