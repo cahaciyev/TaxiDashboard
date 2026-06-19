@@ -536,15 +536,15 @@
     <div class="ce-title" id="ceTitle">Ödəniş daxil et</div>
     <input id="ceInput" type="text" inputmode="decimal" placeholder="30" />
     <div class="ce-quick">
-      <button class="ceq-35" onclick="ceSetSpecial(35)">35 ₼</button>
-      <button class="ceq-i" onclick="ceSetSpecial('i')">İ</button>
-      <button class="ceq-t" onclick="ceSetSpecial('t')">T</button>
-      <button class="ceq-0" onclick="ceSetSpecial(0)">0</button>
+      <button type="button" class="ceq-35" onclick="ceSetSpecial(35)">35 ₼</button>
+      <button type="button" class="ceq-i" onclick="ceSetSpecial('i')">İ</button>
+      <button type="button" class="ceq-t" onclick="ceSetSpecial('t')">T</button>
+      <button type="button" class="ceq-0" onclick="ceSetSpecial(0)">0</button>
     </div>
     <div class="ce-btns">
-      <button class="ce-save" onclick="ceSave()">Saxla</button>
-      <button class="ce-reset" onclick="ceReset()" title="Orijinal dəyərə qayıt">Sıfırla</button>
-      <button class="ce-close" onclick="ceClose()">Ləğv</button>
+      <button type="button" class="ce-save" onclick="ceSave()">Saxla</button>
+      <button type="button" class="ce-reset" onclick="ceReset()">Sıfırla</button>
+      <button type="button" class="ce-close" onclick="ceClose()">Ləğv</button>
     </div>
   </div>
 
@@ -736,7 +736,7 @@ function ceOpen(el,mFull,plate,di,orig){
   if(isMobile()){
     ed.style.display='block'; ov.style.display='block';
     requestAnimationFrame(()=>requestAnimationFrame(()=>ed.classList.add('ce-open')));
-    setTimeout(()=>{ inp.focus(); inp.select(); }, 300);
+    // Mobil: klaviatura avtomatik açılmasın, istifadəçi özü tap etsin
   } else {
     ed.style.display='block';
     const p=el.getBoundingClientRect();
