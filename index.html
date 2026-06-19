@@ -511,7 +511,7 @@
   <!-- CELL EDITOR POPUP -->
   <div id="cellEditor">
     <div class="ce-title" id="ceTitle">Ödəniş daxil et</div>
-    <input id="ceInput" type="number" min="0" step="1" placeholder="30" />
+    <input id="ceInput" type="text" inputmode="decimal" placeholder="30" />
     <div class="ce-quick">
       <button class="ceq-35" onclick="ceSetSpecial(35)">35 ₼</button>
       <button class="ceq-i" onclick="ceSetSpecial('i')">İ</button>
@@ -948,7 +948,7 @@ function renderDaily(){
       const isOv=hasOv(m.full,row.p,i);
       const n=(typeof v==='number')?v:(+v||0);
       if(typeof v==='number'||(!isNaN(+v)&&v!=='')){rowTot+=n;dayTot[i]+=n;}
-      const disp=v===''?`<span style="opacity:.3">${DEFAULT_PAY}</span>`:v;
+      const disp=v===''?'':v;
       html+=`<td class="cell ${dayClass(v)}${isOv?' ov':''}" onclick="ceOpen(this,'${m.full}','${row.p}',${i},'${orig}')" title="${isOv?'Dəyişdirilib — sıfırlamaq üçün Sıfırla düyməsini basın':'Klik edib dəyər daxil edin'}">${disp}</td>`;
     });
     html+=`<td class="tot num">${fmt(rowTot)}</td></tr>`;
