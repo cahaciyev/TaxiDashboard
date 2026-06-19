@@ -1,0 +1,12 @@
+{
+  "name": "Avtopark Dashboard",
+  "short_name": "Avtopark",
+  "icons": [
+    { "src": "apple-touch-icon.png", "sizes": "512x512", "type": "image/png" }
+  ],
+  "start_url": "/TaxiDashboard/",
+  "scope": "/TaxiDashboard/",
+  "display": "standalone",
+  "background_color": "#0F1C30",
+  "theme_color": "#0F1C30"
+}
