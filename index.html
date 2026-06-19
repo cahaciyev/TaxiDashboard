@@ -185,6 +185,12 @@
     border-top:2px solid #b8cadd;font-size:13px}
   table.daily tbody tr:not(.dtot):hover td.plate{background:#f5f8fd}
   table.daily tbody tr:not(.dtot):hover td.tot{background:#e8f0fb}
+  /* Bugünkü gün sütunu */
+  table.daily thead th.dtoday{background:#e23b3b;color:#fff;font-weight:800;
+    box-shadow:0 0 0 1px #e23b3b}
+  table.daily td.cell.dtoday{box-shadow:inset 0 0 0 999px rgba(226,59,59,.08)}
+  table.daily td.cell.dtoday:hover{box-shadow:inset 0 0 0 999px rgba(226,59,59,.16)}
+  table.daily tr.dtot td.dtoday{background:#f7d9d4;color:#a8362d}
   .owner-sums{display:flex;gap:12px;flex-wrap:wrap;margin-top:14px}
   .osum-card{flex:1;min-width:150px;background:var(--card);border-radius:12px;
     box-shadow:0 2px 8px rgba(15,28,48,.06);padding:13px 15px;border-left:4px solid #6B7C93}
@@ -1068,8 +1074,12 @@ function renderDaily(){
   }
   const mIdx=+sel.value;
   const m=daily[mIdx]; if(!m){document.getElementById('dailyTbl').innerHTML='<div class="hint" style="padding:14px">Bu ay üçün günlük data yoxdur.</div>';return;}
+  // Bugünkü günün indeksi (yalnız cari ay/il seçilibsə)
+  const _p=(m.full||'').split(' '), _mo=AZ_MON[_p[0]], _yr=parseInt(_p[1]);
+  const isCurMonth=_mo&&_yr&&(TODAY.getMonth()+1===_mo)&&(TODAY.getFullYear()===_yr);
+  const todayIdx=isCurMonth?TODAY.getDate()-1:-1;
   let html='<table class="daily"><thead><tr><th class="plate">Maşın</th>';
-  m.days.forEach(d=>html+=`<th>${d}</th>`); html+='<th class="tot">Cəmi</th></tr></thead><tbody>';
+  m.days.forEach((d,i)=>html+=`<th${i===todayIdx?' class="dtoday"':''}>${d}</th>`); html+='<th class="tot">Cəmi</th></tr></thead><tbody>';
   const dayTot=m.days.map(()=>0);
   m.rows.forEach(row=>{
     const [a,b,c]=row.p.split('-');
@@ -1083,12 +1093,12 @@ function renderDaily(){
       const disp=v===''?'':v;
       const ts=dailyOvTimes[ovKey(m.full,row.p,i)];
       const tip=isOv?`Dəyişdirilib: ${fmtTime(ts)}`:'Klik edib dəyər daxil edin';
-      html+=`<td class="cell ${dayClass(v)}${isOv?' ov':''}" onclick="ceOpen(this,'${m.full}','${row.p}',${i},'${orig}')" title="${tip}">${disp}</td>`;
+      html+=`<td class="cell ${dayClass(v)}${isOv?' ov':''}${i===todayIdx?' dtoday':''}" onclick="ceOpen(this,'${m.full}','${row.p}',${i},'${orig}')" title="${tip}">${disp}</td>`;
     });
     html+=`<td class="tot num">${fmt(rowTot)}</td></tr>`;
   });
   html+='<tr class="dtot"><td class="plate">Günlük cəmi</td>';
-  dayTot.forEach(t=>html+=`<td class="num">${t||''}</td>`);
+  dayTot.forEach((t,i)=>html+=`<td class="num${i===todayIdx?' dtoday':''}">${t||''}</td>`);
   html+=`<td class="tot num">${fmt(dayTot.reduce((s,x)=>s+x,0))}</td></tr></tbody></table>`;
   document.getElementById('dailyTbl').innerHTML=html;
   const total=dayTot.reduce((s,x)=>s+x,0);
