@@ -743,13 +743,14 @@ function gsWrite(mFull, plate, di, val){
   const st=document.getElementById('gsSyncStatus');
   st.style.display='inline'; st.style.color='var(--mut)'; st.textContent='↑ yazılır…';
   fetch(gsUrl,{
-    method:'POST', mode:'no-cors',
+    method:'POST',
     body: new URLSearchParams({sheet:mFull, plate, di:String(di), val:String(val)})
-  }).then(()=>{
-    st.style.color='var(--teal)'; st.textContent='✓ yazıldı';
+  }).then(r=>r.json()).then(j=>{
+    if(j.ok){ st.style.color='var(--teal)'; st.textContent='✓ Sheets-ə yazıldı'; }
+    else { st.style.color='var(--red)'; st.textContent='✗ '+( j.err||'xəta'); }
     setTimeout(()=>st.style.display='none', 2500);
-  }).catch(()=>{
-    st.style.color='var(--red)'; st.textContent='✗ xəta';
+  }).catch(err=>{
+    st.style.color='var(--red)'; st.textContent='✗ şəbəkə xətası';
     setTimeout(()=>st.style.display='none', 3000);
   });
 }
