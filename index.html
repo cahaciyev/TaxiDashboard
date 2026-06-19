@@ -1,4 +1,4 @@
-﻿<meta charset="utf-8">
+﻿﻿<meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#0F1C30">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -126,7 +126,31 @@
   table.daily thead th.plate{
     background:linear-gradient(to bottom,#f0f4fa,#e8eef6);
     z-index:2;border-right:2px solid #c8d4e6}
-  table.daily td.cell{width:38px;height:36px;font-weight:600;font-size:12.5px;letter-spacing:-.01em}
+  table.daily td.cell{width:38px;height:36px;font-weight:600;font-size:12.5px;letter-spacing:-.01em;cursor:pointer;transition:filter .1s}
+  table.daily td.cell:hover{filter:brightness(.92)}
+  table.daily td.cell.ov{outline:2px solid var(--teal);outline-offset:-2px}
+
+  #cellEditor{display:none;position:fixed;z-index:9999;background:#fff;border-radius:14px;
+    box-shadow:0 12px 40px rgba(15,28,48,.22);border:1px solid #d0daea;padding:16px;width:220px}
+  #cellEditor .ce-title{font-size:11px;font-weight:700;color:var(--mut);text-transform:uppercase;
+    letter-spacing:.06em;margin-bottom:10px}
+  #cellEditor input{width:100%;font:inherit;font-size:22px;font-weight:800;padding:8px 10px;
+    border:2px solid #d0daea;border-radius:9px;text-align:center;outline:none;color:var(--ink)}
+  #cellEditor input:focus{border-color:var(--teal)}
+  #cellEditor .ce-quick{display:flex;gap:5px;margin-top:9px}
+  #cellEditor .ce-quick button{flex:1;font:inherit;font-size:11px;font-weight:700;padding:6px 4px;
+    border-radius:7px;cursor:pointer;border:1px solid}
+  .ceq-i{background:#fef0d6;color:#8a5a08;border-color:#fde0a0!important}
+  .ceq-t{background:#ede9fd;color:#5038b0;border-color:#ddd6fe!important}
+  .ceq-0{background:#fde8e6;color:#9e2e25;border-color:#fcc!important}
+  #cellEditor .ce-btns{display:flex;gap:7px;margin-top:10px}
+  #cellEditor .ce-save{flex:1;font:inherit;font-size:13px;font-weight:700;padding:8px;
+    border-radius:8px;border:0;background:var(--teal);color:#fff;cursor:pointer}
+  #cellEditor .ce-save:hover{background:#178a7d}
+  #cellEditor .ce-reset{font:inherit;font-size:12px;font-weight:600;padding:8px 9px;
+    border-radius:8px;border:1px solid #e0e6f0;background:#f5f7fb;color:var(--mut);cursor:pointer}
+  #cellEditor .ce-close{font:inherit;font-size:12px;font-weight:600;padding:8px 9px;
+    border-radius:8px;border:1px solid #e0e6f0;background:#f5f7fb;color:var(--mut);cursor:pointer}
   table.daily td.tot{
     font-weight:800;background:#f0f5fb;min-width:72px;
     color:#16304f;font-size:13.5px;border-left:2px solid #c8d4e6}
@@ -475,11 +499,29 @@
         <span><i class="cP"></i> Ödəniş</span><span><i class="cI"></i> İşləmədi (i)</span>
         <span><i class="cT"></i> Təmir (t)</span><span><i class="cZ"></i> 0 — ödəniş yox</span>
         <span><i class="cE" style="border:1px solid #e2e7ef"></i> Boş</span>
+        <span><i style="background:transparent;border:2px solid var(--teal)"></i> Dəyişdirilib</span>
+        <span style="color:var(--teal);font-weight:600">✎ Hər xanaya klik edib dəyər daxil et (default: 30 ₼)</span>
       </div>
       <div class="dscroll"><div id="dailyTbl"></div></div>
       <div class="hint" id="dailyNote" style="margin-top:10px"></div>
     </div>
   </section>
+
+  <!-- CELL EDITOR POPUP -->
+  <div id="cellEditor">
+    <div class="ce-title" id="ceTitle">Ödəniş daxil et</div>
+    <input id="ceInput" type="number" min="0" step="1" placeholder="30" />
+    <div class="ce-quick">
+      <button class="ceq-i" onclick="ceSetSpecial('i')">İ — istirahət</button>
+      <button class="ceq-t" onclick="ceSetSpecial('t')">T — təmir</button>
+      <button class="ceq-0" onclick="ceSetSpecial(0)">0 — ödəymədi</button>
+    </div>
+    <div class="ce-btns">
+      <button class="ce-save" onclick="ceSave()">Saxla</button>
+      <button class="ce-reset" onclick="ceReset()" title="Orijinal dəyərə qayıt">Sıfırla</button>
+      <button class="ce-close" onclick="ceClose()">Ləğv</button>
+    </div>
+  </div>
 
   <!-- CARS -->
   <section class="view" id="v-cars">
@@ -636,6 +678,60 @@ let daily = [
     "77-QJ-520":["i",40,40,40,40,40,35,35,35,35,35,35,35,"",0,0,0,0,0,0,0,0,0,0,0,0,40,40,40,40,40]
   },31)}
 ];
+// ── ÖDƏNİŞ OVERRIDE SİSTEMİ ──
+let dailyOverrides = JSON.parse(localStorage.getItem('dailyOverrides')||'{}');
+function ovKey(mFull,plate,di){ return mFull+'|'+plate+'|'+di; }
+function getEffVal(mFull,plate,di,orig){
+  const k=ovKey(mFull,plate,di);
+  return k in dailyOverrides ? dailyOverrides[k] : orig;
+}
+function hasOv(mFull,plate,di){ return ovKey(mFull,plate,di) in dailyOverrides; }
+
+// ── CELL EDITOR ──
+let _ce={mFull:'',plate:'',di:0,orig:''};
+function ceOpen(el,mFull,plate,di,orig){
+  _ce={mFull,plate,di,orig};
+  const eff=getEffVal(mFull,plate,di,orig);
+  const p=el.getBoundingClientRect();
+  const ed=document.getElementById('cellEditor');
+  ed.style.display='block';
+  let left=p.left, top=p.bottom+6;
+  if(left+224>window.innerWidth) left=window.innerWidth-228;
+  if(left<4) left=4;
+  if(top+ed.offsetHeight>window.innerHeight) top=p.top-ed.offsetHeight-6;
+  ed.style.left=left+'px'; ed.style.top=top+'px';
+  const [a,b,c]=plate.split('-');
+  document.getElementById('ceTitle').textContent=`${a}-${b}-${c} · ${mFull} · ${di+1}-ci gün`;
+  const inp=document.getElementById('ceInput');
+  inp.value=(eff===''||eff===null||eff===undefined)?String(DEFAULT_PAY):String(eff);
+  inp.focus();inp.select();
+}
+function ceClose(){ document.getElementById('cellEditor').style.display='none'; }
+function ceSetSpecial(v){
+  const inp=document.getElementById('ceInput');
+  inp.value=String(v);
+}
+function ceSave(){
+  const raw=document.getElementById('ceInput').value.trim();
+  let val;
+  if(raw===''){ val=''; }
+  else if(raw.toLowerCase()==='i'||raw==='İ'||raw.toLowerCase()==='i̇'){ val='i'; }
+  else if(raw.toLowerCase()==='t'){ val='t'; }
+  else { const n=Number(raw); val=isNaN(n)?raw:n; }
+  const k=ovKey(_ce.mFull,_ce.plate,_ce.di);
+  dailyOverrides[k]=val;
+  localStorage.setItem('dailyOverrides',JSON.stringify(dailyOverrides));
+  ceClose(); renderDaily(); renderAll();
+}
+function ceReset(){
+  const k=ovKey(_ce.mFull,_ce.plate,_ce.di);
+  delete dailyOverrides[k];
+  localStorage.setItem('dailyOverrides',JSON.stringify(dailyOverrides));
+  ceClose(); renderDaily(); renderAll();
+}
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') ceClose(); if(e.key==='Enter'&&document.getElementById('cellEditor').style.display!=='none') ceSave(); });
+document.addEventListener('mousedown',e=>{ const ed=document.getElementById('cellEditor'); if(ed.style.display!=='none'&&!ed.contains(e.target)&&!e.target.classList.contains('cell')) ceClose(); });
+
 let cars = [
   {p:"77-SN-437",o:"Cavid",d:"Memmedov Ceyhun",price:23250,inc:12107,exp:1086,pb:0.5207},
   {p:"77-UD-140",o:"Fuad",d:"Ismayilov Samir",price:22000,inc:11446,exp:821,pb:0.5203},
@@ -829,13 +925,15 @@ function draw(k){
 // ============ DAILY ============
 function dayClass(v){ if(v===""||v===null) return 'cE'; if(v==='i'||v==='İ') return 'cI';
   if(String(v).toLowerCase()==='t') return 'cT'; const n=+v; if(n===0) return 'cZ'; if(n>=200) return 'cBig'; return 'cP'; }
+const DEFAULT_PAY = 30;
 function renderDaily(){
   const sel=document.getElementById('monthSel');
   if(sel.options.length!==daily.length){
     sel.innerHTML=daily.map((m,i)=>`<option value="${i}">${m.full}</option>`).join('');
     sel.value=daily.length-1;
   }
-  const m=daily[+sel.value]; if(!m){document.getElementById('dailyTbl').innerHTML='<div class="hint" style="padding:14px">Bu ay üçün günlük data yoxdur.</div>';return;}
+  const mIdx=+sel.value;
+  const m=daily[mIdx]; if(!m){document.getElementById('dailyTbl').innerHTML='<div class="hint" style="padding:14px">Bu ay üçün günlük data yoxdur.</div>';return;}
   let html='<table class="daily"><thead><tr><th class="plate">Maşın</th>';
   m.days.forEach(d=>html+=`<th>${d}</th>`); html+='<th class="tot">Cəmi</th></tr></thead><tbody>';
   const dayTot=m.days.map(()=>0);
@@ -843,9 +941,14 @@ function renderDaily(){
     const [a,b,c]=row.p.split('-');
     html+=`<tr><td class="plate">${a}-${b}-${c}</td>`;
     let rowTot=0;
-    row.vals.forEach((v,i)=>{ const n=(typeof v==='number')?v:(+v||0);
+    row.vals.forEach((orig,i)=>{
+      const v=getEffVal(m.full,row.p,i,orig);
+      const isOv=hasOv(m.full,row.p,i);
+      const n=(typeof v==='number')?v:(+v||0);
       if(typeof v==='number'||(!isNaN(+v)&&v!=='')){rowTot+=n;dayTot[i]+=n;}
-      html+=`<td class="cell ${dayClass(v)}">${v===''?'':v}</td>`; });
+      const disp=v===''?`<span style="opacity:.3">${DEFAULT_PAY}</span>`:v;
+      html+=`<td class="cell ${dayClass(v)}${isOv?' ov':''}" onclick="ceOpen(this,'${m.full}','${row.p}',${i},'${orig}')" title="${isOv?'Dəyişdirilib — sıfırlamaq üçün Sıfırla düyməsini basın':'Klik edib dəyər daxil edin'}">${disp}</td>`;
+    });
     html+=`<td class="tot num">${fmt(rowTot)}</td></tr>`;
   });
   html+='<tr class="dtot"><td class="plate">Günlük cəmi</td>';
@@ -853,7 +956,8 @@ function renderDaily(){
   html+=`<td class="tot num">${fmt(dayTot.reduce((s,x)=>s+x,0))}</td></tr></tbody></table>`;
   document.getElementById('dailyTbl').innerHTML=html;
   const total=dayTot.reduce((s,x)=>s+x,0);
-  document.getElementById('dailyNote').textContent=`${m.full}: ümumi günlük ödənişlər ${fmt(total)} ₼ · "i" işləmədiyi günlər, "t" təmir, "0" ödəniş daxil edilməyib.`;
+  const ovCount=Object.keys(dailyOverrides).filter(k=>k.startsWith(m.full+'|')).length;
+  document.getElementById('dailyNote').textContent=`${m.full}: ümumi günlük ödənişlər ${fmt(total)} ₼ · "i" işləmədiyi günlər, "t" təmir, "0" ödəniş daxil edilməyib.`+(ovCount?` · ${ovCount} xana lokal olaraq dəyişdirilib`:'');
 }
 
 // ============ CARS ============
@@ -1691,4 +1795,5 @@ document.addEventListener('click',_unlockAudio,{once:true,passive:true});
   document.head.appendChild(L);
 })();
 </script>
+
 
