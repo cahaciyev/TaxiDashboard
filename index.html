@@ -5,9 +5,11 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Avtopark">
 <title>Avtopark — İnteraktiv Dashboard</title>
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="manifest" href="manifest.json">
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%230F1C30'/><rect x='8' y='37' width='48' height='19' rx='4' fill='%23F5C518'/><path d='M16 37L21 19h22l5 18z' fill='%23F5C518'/><rect x='26' y='13' width='12' height='8' rx='2' fill='white'/><path d='M22 37l4-13h12l4 13z' fill='%230F1C30' opacity='.55'/><circle cx='20' cy='56' r='6' fill='%23162A45'/><circle cx='44' cy='56' r='6' fill='%23162A45'/></svg>">
+<link rel="icon" type="image/png" sizes="512x512" href="apple-touch-icon.png">
+<link rel="shortcut icon" type="image/png" href="apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
@@ -1882,68 +1884,3 @@ document.addEventListener('click',_unlockAudio,{once:true,passive:true});
 
 </script>
 
-<script>
-// Apple-touch-icon — Taxi badge ikonu
-(function(){
-  const S=512,C=document.createElement('canvas');
-  C.width=C.height=S;const x=C.getContext('2d');
-  const cx=256,cy=256;
-  // Ağ fon
-  x.fillStyle='#FFF';x.fillRect(0,0,S,S);
-  // Xarici qara dairə
-  x.fillStyle='#111';x.beginPath();x.arc(cx,cy,252,0,6.28);x.fill();
-  // Şahmat naxışlı halqa
-  x.save();
-  x.beginPath();x.arc(cx,cy,253,0,6.28);x.arc(cx,cy,209,0,6.28,true);x.clip('evenodd');
-  for(let i=0;i<36;i++){
-    const a=(i/36)*6.28-1.57,b=((i+1)/36)*6.28-1.57;
-    x.fillStyle=i%2?'#111':'#FFF';
-    x.beginPath();x.moveTo(cx,cy);x.arc(cx,cy,260,a,b);x.closePath();x.fill();
-  }
-  x.restore();
-  // Sarı daxili dairə
-  x.fillStyle='#F5C518';x.beginPath();x.arc(cx,cy,208,0,6.28);x.fill();
-  x.strokeStyle='#111';x.lineWidth=10;x.beginPath();x.arc(cx,cy,208,0,6.28);x.stroke();
-  // Taksi siluetiː gövdə
-  const bx=cx,by=138;
-  x.fillStyle='#111';
-  x.beginPath();x.roundRect(bx-118,by+12,236,53,[0,0,14,14]);x.fill();
-  x.beginPath();x.moveTo(bx-80,by+12);x.lineTo(bx-60,by-38);x.lineTo(bx+68,by-38);x.lineTo(bx+90,by+12);x.closePath();x.fill();
-  // Təkərlər
-  x.beginPath();x.arc(bx-74,by+72,22,0,6.28);x.fill();
-  x.beginPath();x.arc(bx+72,by+72,22,0,6.28);x.fill();
-  x.fillStyle='#F5C518';
-  x.beginPath();x.arc(bx-74,by+72,8,0,6.28);x.fill();
-  x.beginPath();x.arc(bx+72,by+72,8,0,6.28);x.fill();
-  // Damüstü TAXI nişanı
-  x.fillStyle='#111';x.beginPath();x.roundRect(bx-32,by-58,64,22,4);x.fill();
-  for(let i=0;i<5;i++)for(let j=0;j<2;j++){
-    x.fillStyle=(i+j)%2?'#111':'#FFF';x.fillRect(bx-31+i*12.4,by-57+j*10,12.4,10);
-  }
-  // Far və arxa işıq
-  x.fillStyle='#FFFCE0';x.beginPath();x.ellipse(bx+122,by+28,8,14,0,0,6.28);x.fill();
-  x.fillStyle='#FF3333';x.beginPath();x.ellipse(bx-122,by+28,8,14,0,0,6.28);x.fill();
-  // Üfüqi xətlər
-  x.strokeStyle='#111';x.lineWidth=10;x.lineCap='round';
-  x.beginPath();x.moveTo(cx-192,cy-18);x.lineTo(cx+192,cy-18);x.stroke();
-  x.beginPath();x.moveTo(cx-192,cy+66);x.lineTo(cx+192,cy+66);x.stroke();
-  // TAXI yazısı
-  x.fillStyle='#111';x.font='bold 110px Arial';
-  x.textAlign='center';x.textBaseline='middle';
-  x.fillText('TAXI',cx,cy+24);
-  // Alt şahmat zolaği
-  const sy=cy+78,sh=26,sl=cx-130,sw=260,sq=13;
-  x.save();
-  x.beginPath();x.roundRect(sl,sy,sw,sh,5);x.clip();
-  for(let i=0;i<21;i++)for(let j=0;j<2;j++){
-    x.fillStyle=(i+j)%2?'#111':'#FFF';x.fillRect(sl+i*sq,sy+j*sq,sq,sq);
-  }
-  x.restore();
-  x.strokeStyle='#111';x.lineWidth=3;
-  x.beginPath();x.roundRect(sl,sy,sw,sh,5);x.stroke();
-  // Link tag-a yaz
-  const el=document.querySelector('link[rel="apple-touch-icon"]');
-  if(el)el.href=C.toDataURL();
-  else{const L=document.createElement('link');L.rel='apple-touch-icon';L.href=C.toDataURL();document.head.appendChild(L);}
-})();
-</script>
