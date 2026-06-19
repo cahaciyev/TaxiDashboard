@@ -737,7 +737,8 @@ function ceReset(){
 }
 
 // ── GOOGLE SHEETS WRITE ──
-let gsUrl = localStorage.getItem('gsUrl') || '';
+const GS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw2IwyqkAZTmXf4eoheTAW9XT1nab5BRJMy5cHMiNGSXnsUQVno1FPw9uQ_woouts4/exec';
+let gsUrl = localStorage.getItem('gsUrl') || GS_SCRIPT_URL;
 function gsWrite(mFull, plate, di, val){
   if(!gsUrl) return;
   const st=document.getElementById('gsSyncStatus');
