@@ -851,6 +851,10 @@ let avto = [
 ];
 
 const ownerColor={Mama:'#2D6CDF',Fuad:'#7A5AF8',Cavid:'#1E9E8F'};
+// Cərimə keşi — render-dən əvvəl təyin olunmalıdır (TDZ qarşısını al)
+const WORKER_BASE = 'https://noisy-voice-468f.cahaciyev.workers.dev';
+const fineCache   = {};
+const fineSeenIds = {};
 const pbColor=v=>v>=0.5?'#1E9E8F':v>=0.45?'#E29A2E':'#DD5247';
 (()=>{const d=TODAY,p=n=>n.toString().padStart(2,'0');document.getElementById('today').textContent=p(d.getDate())+'.'+p(d.getMonth()+1)+'.'+d.getFullYear();})();
 
@@ -1568,9 +1572,7 @@ setInterval(loadLive, AUTO_MS);
 loadLive();
 
 // ── CƏRİMƏ & HƏBS API ──
-const WORKER_BASE = 'https://noisy-voice-468f.cahaciyev.workers.dev';
-const fineCache   = {};
-const fineSeenIds = {};
+// WORKER_BASE, fineCache, fineSeenIds yuxarıda (ownerColor yanında) təyin olunub
 
 async function loadArrestStatus(){
   try{
