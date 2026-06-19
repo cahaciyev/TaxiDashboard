@@ -185,6 +185,18 @@
     border-top:2px solid #b8cadd;font-size:13px}
   table.daily tbody tr:not(.dtot):hover td.plate{background:#f5f8fd}
   table.daily tbody tr:not(.dtot):hover td.tot{background:#e8f0fb}
+  .owner-sums{display:flex;gap:12px;flex-wrap:wrap;margin-top:14px}
+  .osum-card{flex:1;min-width:150px;background:var(--card);border-radius:12px;
+    box-shadow:0 2px 8px rgba(15,28,48,.06);padding:13px 15px;border-left:4px solid #6B7C93}
+  .osum-card .osum-lab{font-size:12px;font-weight:700;color:var(--mut);letter-spacing:.02em}
+  .osum-card .osum-val{font-size:21px;font-weight:800;color:var(--ink);margin-top:3px;font-family:'JetBrains Mono',monospace}
+  .osum-card .osum-sub{font-size:11px;color:var(--mut);margin-top:2px}
+  .osum-card.grand{border-left-color:var(--teal);background:#f3fbf9}
+  @media(max-width:640px){.osum-card{min-width:calc(50% - 6px)}.osum-card .osum-val{font-size:18px}}
+  .vcard .vdaily{display:flex;align-items:center;justify-content:space-between;
+    margin-top:10px;padding-top:10px;border-top:1px dashed #e2e8f1}
+  .vcard .vdaily .vd-lab{font-size:12px;color:var(--mut);font-weight:600}
+  .vcard .vdaily .vd-val{font-size:16px;font-weight:800;color:var(--teal);font-family:'JetBrains Mono',monospace}
   .cP{background:#e2f5ee;color:#0a5e50}
   .cBig{background:#1E9E8F;color:#fff;font-weight:800}
   .cI{background:#fef0d6;color:#8a5a08}
@@ -532,6 +544,7 @@
         <span style="color:var(--teal);font-weight:600">✎ Hər xanaya klik edib dəyər daxil et (default: 30 ₼)</span>
       </div>
       <div class="dscroll"><div id="dailyTbl"></div></div>
+      <div class="owner-sums" id="ownerSums"></div>
       <div class="hint" id="dailyNote" style="margin-top:10px"></div>
     </div>
   </section>
@@ -1025,6 +1038,24 @@ function draw(k){
 function dayClass(v){ if(v===""||v===null) return 'cE'; if(v==='i'||v==='İ') return 'cI';
   if(String(v).toLowerCase()==='t') return 'cT'; const n=+v; if(n===0) return 'cZ'; if(n>=200) return 'cBig'; return 'cP'; }
 const DEFAULT_PAY = 30;
+// Bir maşının seçilmiş ay üzrə günlük cəmi (override-lar nəzərə alınır)
+function plateDailySum(m, plate){
+  const row=m.rows.find(r=>r.p===plate);
+  if(!row) return 0;
+  let sum=0;
+  row.vals.forEach((orig,i)=>{
+    const v=getEffVal(m.full,plate,i,orig);
+    if(typeof v==='number'||(!isNaN(+v)&&v!=='')) sum+=(+v||0);
+  });
+  return sum;
+}
+function ownerOf(plate){ const c=(cars||[]).find(x=>x.p===plate); return c?c.o:'Digər'; }
+// Seçilmiş ay üzrə hər sahibin günlük cəmi
+function ownerDailySums(m){
+  const sums={};
+  m.rows.forEach(row=>{ const o=ownerOf(row.p); sums[o]=(sums[o]||0)+plateDailySum(m,row.p); });
+  return sums;
+}
 function renderDaily(){
   const sel=document.getElementById('monthSel');
   if(sel.options.length!==daily.length){
@@ -1059,6 +1090,24 @@ function renderDaily(){
   const total=dayTot.reduce((s,x)=>s+x,0);
   const ovCount=Object.keys(dailyOverrides).filter(k=>k.startsWith(m.full+'|')).length;
   document.getElementById('dailyNote').textContent=`${m.full}: ümumi günlük ödənişlər ${fmt(total)} ₼ · "i" işləmədiyi günlər, "t" təmir, "0" ödəniş daxil edilməyib.`+(ovCount?` · ${ovCount} xana lokal olaraq dəyişdirilib`:'');
+  // Sahib üzrə günlük cəmlər
+  const osums=ownerDailySums(m);
+  const ownerOrder=['Mama','Fuad','Cavid'];
+  let osHtml='';
+  ownerOrder.forEach(o=>{
+    if(!(o in osums)) return;
+    const col=ownerColor[o]||'#6B7C93';
+    const cnt=(cars||[]).filter(c=>c.o===o).length;
+    osHtml+=`<div class="osum-card" style="border-left-color:${col}">
+      <div class="osum-lab" style="color:${col}">${o}</div>
+      <div class="osum-val">${fmt(osums[o])} ₼</div>
+      <div class="osum-sub">${cnt} maşın · ${m.full}</div></div>`;
+  });
+  osHtml+=`<div class="osum-card grand">
+    <div class="osum-lab" style="color:var(--teal)">Ümumi cəm</div>
+    <div class="osum-val">${fmt(total)} ₼</div>
+    <div class="osum-sub">bütün maşınlar · ${m.full}</div></div>`;
+  document.getElementById('ownerSums').innerHTML=osHtml;
   // Mobil: cari günə scroll et
   if(window.innerWidth<=640){
     setTimeout(()=>{
@@ -1084,8 +1133,13 @@ let curOwner='all';
 const arrestMap = {}; // normPlate → {arrested:bool} — loadArrestStatus tərəfindən doldurulur
 function renderCars(f){
   curOwner=f;const list=f==='all'?cars:cars.filter(c=>c.o===f);
+  // Kart məbləği üçün seçilmiş ay (Günlük tab ilə eyni)
+  const msel=document.getElementById('monthSel');
+  const mIdx=(msel&&msel.value!=='')?+msel.value:daily.length-1;
+  const dm=daily[mIdx]||daily[daily.length-1];
   document.getElementById('vgrid').innerHTML=list.map(c=>{
     const col=ownerColor[c.o]||'#6B7C93';const[a,b,d]=c.p.split('-');
+    const dsum=dm?plateDailySum(dm,c.p):0;
     const fid='fb-'+c.p.replace(/-/g,'_');
     const arKey=c.p.replace(/-/g,'');
     const arInfo=arrestMap[arKey]||{};
@@ -1102,6 +1156,7 @@ function renderCars(f){
       <div class="vfoot"><div>Gəlir<b class="num">${fmt(c.inc)} ₼</b></div>
         <div>Xərc<b class="num">${fmt(c.exp)} ₼</b></div>
         <div style="text-align:right">Qiymət<b class="num">${fmt(c.price)} ₼</b></div></div>
+      <div class="vdaily"><span class="vd-lab">Günlük cəmi · ${dm?dm.full:''}</span><span class="vd-val">${fmt(dsum)} ₼</span></div>
       <div id="${fid}" class="fine-badge" style="display:none"></div>
     </div>`;
   }).join('');
@@ -1409,7 +1464,7 @@ document.getElementById('seg').addEventListener('click',e=>{const b=e.target.clo
   document.querySelectorAll('#seg button').forEach(x=>x.classList.remove('on'));b.classList.add('on');draw(+b.dataset.k);});
 document.getElementById('filters').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
   document.querySelectorAll('#filters button').forEach(x=>x.classList.remove('on'));b.classList.add('on');renderCars(b.dataset.o);});
-document.getElementById('monthSel').addEventListener('change',renderDaily);
+document.getElementById('monthSel').addEventListener('change',()=>{renderDaily();renderCars(curOwner);});
 
 renderAll();
 
