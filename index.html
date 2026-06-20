@@ -744,12 +744,43 @@ let daily = [
 ];
 // ── ÖDƏNİŞ OVERRIDE SİSTEMİ ──
 let dailyOverrides = JSON.parse(localStorage.getItem('dailyOverrides')||'{}');
-let dailyOvTimes   = {};  // server-dən yüklənir, localStorage deyil
+let dailyOvTimes   = JSON.parse(localStorage.getItem('dailyOvTimes')||'{}');  // server + lokal birləşmə
+let dailyResets    = JSON.parse(localStorage.getItem('dailyResets')||'{}');   // sıfırlama tombstone-ları (açar -> vaxt)
 function fmtTime(ts){ if(!ts) return ''; const d=new Date(ts),p=n=>String(n).padStart(2,'0'); return p(d.getDate())+'.'+p(d.getMonth()+1)+'.'+d.getFullYear()+' '+p(d.getHours())+':'+p(d.getMinutes()); }
+// Dəyəri ceSave ilə eyni qaydada normallaşdır (server string qaytarır)
+function normVal(raw){
+  if(raw===null||raw===undefined) return '';
+  const s=String(raw).trim();
+  if(s==='') return '';
+  const low=s.toLowerCase();
+  if(low==='i'||s==='İ'||low==='i̇') return 'i';
+  if(low==='t') return 't';
+  const n=Number(s); return isNaN(n)?s:n;
+}
 async function loadTimestamps(){
   try{
     const r=await fetch(GS_SCRIPT_URL); const j=await r.json();
-    if(j.rows){ dailyOvTimes={}; j.rows.forEach(row=>{ if(row.ts) dailyOvTimes[ovKey(row.sheet,row.plate,row.di)]=row.ts; }); renderDaily(); }
+    if(!j.rows) return;
+    // Açar üzrə serverdəki ən son qeydi seç (dublikatlarda ən böyük ts)
+    const srv={};
+    j.rows.forEach(row=>{
+      if(!row.ts) return;
+      const k=ovKey(row.sheet,row.plate,row.di);
+      if(!(k in srv) || row.ts>srv[k].ts) srv[k]={ts:row.ts, val:row.val};
+    });
+    // Server -> lokal birləşmə: dəyər + tarix BÜTÜN cihazlarda görünsün.
+    // İstisna: lokal dəyişiklik daha yenidirsə (hələ yazılmayıb) və ya bu cihazda
+    // sonradan sıfırlanıbsa, server qeydi ilə üzərinə yazma.
+    Object.keys(srv).forEach(k=>{
+      const sv=srv[k];
+      if((dailyResets[k]||0) >= sv.ts) return;   // bu cihazda daha sonra sıfırlanıb
+      if((dailyOvTimes[k]||0) > sv.ts)  return;   // lokal dəyişiklik daha yenidir
+      dailyOverrides[k]=normVal(sv.val);
+      dailyOvTimes[k]=sv.ts;
+    });
+    localStorage.setItem('dailyOverrides',JSON.stringify(dailyOverrides));
+    localStorage.setItem('dailyOvTimes',JSON.stringify(dailyOvTimes));
+    renderAll();
   }catch(e){}
 }
 function ovKey(mFull,plate,di){ return mFull+'|'+plate+'|'+di; }
@@ -812,7 +843,10 @@ function ceSave(){
   const k=ovKey(_ce.mFull,_ce.plate,_ce.di);
   dailyOverrides[k]=val;
   dailyOvTimes[k]=Date.now(); // optimistik — server cavabında dəqiqləşəcək
+  delete dailyResets[k];      // varsa, əvvəlki sıfırlamanı ləğv et
   localStorage.setItem('dailyOverrides',JSON.stringify(dailyOverrides));
+  localStorage.setItem('dailyOvTimes',JSON.stringify(dailyOvTimes));
+  localStorage.setItem('dailyResets',JSON.stringify(dailyResets));
   gsWrite(_ce.mFull,_ce.plate,_ce.di,val);
   ceClose(); renderDaily(); renderAll();
 }
@@ -820,7 +854,10 @@ function ceReset(){
   const k=ovKey(_ce.mFull,_ce.plate,_ce.di);
   delete dailyOverrides[k];
   delete dailyOvTimes[k];
+  dailyResets[k]=Date.now();  // tombstone — sinx zamanı server qeydi geri qaytarmasın
   localStorage.setItem('dailyOverrides',JSON.stringify(dailyOverrides));
+  localStorage.setItem('dailyOvTimes',JSON.stringify(dailyOvTimes));
+  localStorage.setItem('dailyResets',JSON.stringify(dailyResets));
   ceClose(); renderDaily(); renderAll();
 }
 
