@@ -199,10 +199,6 @@
   .osum-card .osum-sub{font-size:11px;color:var(--mut);margin-top:2px}
   .osum-card.grand{border-left-color:var(--teal);background:#f3fbf9}
   @media(max-width:640px){.osum-card{min-width:calc(50% - 6px)}.osum-card .osum-val{font-size:18px}}
-  .vcard .vdaily{display:flex;align-items:center;justify-content:space-between;
-    margin-top:10px;padding-top:10px;border-top:1px dashed #e2e8f1}
-  .vcard .vdaily .vd-lab{font-size:12px;color:var(--mut);font-weight:600}
-  .vcard .vdaily .vd-val{font-size:16px;font-weight:800;color:var(--teal);font-family:'JetBrains Mono',monospace}
   .cP{background:#e2f5ee;color:#0a5e50}
   .cBig{background:#1E9E8F;color:#fff;font-weight:800}
   .cI{background:#fef0d6;color:#8a5a08}
@@ -226,11 +222,6 @@
   .vlbl{font-size:11px;font-weight:700;letter-spacing:.02em}
   .vlbl.drive{color:#21a04a}
   .vlbl.park{color:#d23b34}
-  /* Maşın kartı: geekbro aktiv/qeyri-aktiv */
-  .vdot.act{background:#21a04a;box-shadow:0 0 0 0 rgba(33,160,74,.55);animation:vblink-g 1.1s ease-in-out infinite}
-  .vdot.inact{background:#9aa7b8}
-  .vlbl.act{color:#21a04a}
-  .vlbl.inact{color:#8190a3}
   @keyframes vblink-g{0%{opacity:1;box-shadow:0 0 0 0 rgba(33,160,74,.55)}70%{opacity:.35;box-shadow:0 0 0 7px rgba(33,160,74,0)}100%{opacity:1;box-shadow:0 0 0 0 rgba(33,160,74,0)}}
   @keyframes vblink-r{0%{opacity:1;box-shadow:0 0 0 0 rgba(210,59,52,.5)}70%{opacity:.4;box-shadow:0 0 0 7px rgba(210,59,52,0)}100%{opacity:1;box-shadow:0 0 0 0 rgba(210,59,52,0)}}
   .otag{font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px}
@@ -1208,16 +1199,8 @@ let curOwner='all';
 const arrestMap = {}; // normPlate → {arrested:bool} — loadArrestStatus tərəfindən doldurulur
 function renderCars(f){
   curOwner=f;const list=f==='all'?cars:cars.filter(c=>c.o===f);
-  // Kart məbləği üçün seçilmiş ay (Günlük tab ilə eyni)
-  const msel=document.getElementById('monthSel');
-  const mIdx=(msel&&msel.value!=='')?+msel.value:daily.length-1;
-  const dm=daily[mIdx]||daily[daily.length-1];
   document.getElementById('vgrid').innerHTML=list.map(c=>{
     const col=ownerColor[c.o]||'#6B7C93';const[a,b,d]=c.p.split('-');
-    const gb=gbStatusMap[gbPlateKey(c.p)];
-    const gbActive=gb?(gb.status==='ACTIVE'||gb.active===true):null;
-    const gbCls=gbActive?'act':'inact';
-    const gbTxt=gb==null?'Məlumat yoxdur':(gbActive?'Aktiv':'Qeyri-aktiv');
     const fid='fb-'+c.p.replace(/-/g,'_');
     const arKey=c.p.replace(/-/g,'');
     const arInfo=arrestMap[arKey]||{};
@@ -1234,7 +1217,6 @@ function renderCars(f){
       <div class="vfoot"><div>Gəlir<b class="num">${fmt(c.inc)} ₼</b></div>
         <div>Xərc<b class="num">${fmt(c.exp)} ₼</b></div>
         <div style="text-align:right">Qiymət<b class="num">${fmt(c.price)} ₼</b></div></div>
-      <div class="vdaily"><span class="vd-lab">Geekbro statusu</span><span class="vstat"><span class="vdot ${gbCls}"></span><span class="vlbl ${gbCls}">${gbTxt}</span></span></div>
       <div id="${fid}" class="fine-badge" style="display:none"></div>
     </div>`;
   }).join('');
@@ -1427,16 +1409,7 @@ async function fetchGpsData(){
   }
 }
 
-// Geekbro statusu plaka -> {status,active} (maşın kartlarında istifadə olunur)
-let gbStatusMap={};
-const gbPlateKey=p=>String(p||'').replace(/[^a-z0-9]/gi,'').toUpperCase();
 function renderGpsData(drivers){
-  // Statusu plakaya görə yadda saxla ki, Maşınlar tabında da görünsün
-  drivers.forEach(d=>{
-    const pk=gbPlateKey(d.vehicle?.plateNumber||d.firstName);
-    if(pk) gbStatusMap[pk]={status:d.status, active:d.active};
-  });
-  renderCars(curOwner);
   const totalKm=drivers.reduce((s,d)=>s+(d.dailyKm||0),0);
   const active=drivers.filter(d=>(d.dailyKm||0)>0).length;
   document.getElementById('gpsActive').innerHTML=active+'<small>/'+drivers.length+'</small>';
@@ -1711,7 +1684,6 @@ async function loadLive(){
     loadAllFines();
     loadTimestamps();
     loadArrestStatus();
-    fetchGpsData(); // maşın kartlarındakı aktiv/qeyri-aktiv statusu üçün
   } catch(e){
     console.error('Sheets xəta:', e);
     setStatus('● Xəta: '+e.message,'#DD5247');
