@@ -218,6 +218,16 @@
   .plate{display:inline-flex;align-items:stretch;border:1.5px solid #1b2b44;border-radius:7px;overflow:hidden;background:#fff}
   .plate .az{background:#2D6CDF;color:#fff;font-size:9px;font-weight:800;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:0 6px;line-height:1.05}
   .plate .pn{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:14px;letter-spacing:.03em;padding:6px 9px;color:#10233e}
+  /* Canlı durum işığı: yaşıl = sürüş, qırmızı = park */
+  .vstat{display:inline-flex;align-items:center;gap:7px;vertical-align:middle}
+  .vdot{width:11px;height:11px;border-radius:50%;flex:0 0 auto;display:inline-block}
+  .vdot.drive{background:#21a04a;box-shadow:0 0 0 0 rgba(33,160,74,.55);animation:vblink-g 1.1s ease-in-out infinite}
+  .vdot.park{background:#d23b34;box-shadow:0 0 0 0 rgba(210,59,52,.55);animation:vblink-r 1.4s ease-in-out infinite}
+  .vlbl{font-size:11px;font-weight:700;letter-spacing:.02em}
+  .vlbl.drive{color:#21a04a}
+  .vlbl.park{color:#d23b34}
+  @keyframes vblink-g{0%{opacity:1;box-shadow:0 0 0 0 rgba(33,160,74,.55)}70%{opacity:.35;box-shadow:0 0 0 7px rgba(33,160,74,0)}100%{opacity:1;box-shadow:0 0 0 0 rgba(33,160,74,0)}}
+  @keyframes vblink-r{0%{opacity:1;box-shadow:0 0 0 0 rgba(210,59,52,.5)}70%{opacity:.4;box-shadow:0 0 0 7px rgba(210,59,52,0)}100%{opacity:1;box-shadow:0 0 0 0 rgba(210,59,52,0)}}
   .otag{font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px}
   .vdriver{font-size:13px;color:var(--mut);margin-top:11px}.vdriver b{color:var(--ink);font-weight:600}
   .bar-row{margin-top:12px}.bar-lab{display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px}
@@ -675,6 +685,10 @@
           </tr></thead>
           <tbody id="gpsTblBody"></tbody>
         </table>
+      </div>
+      <div style="display:flex;gap:16px;align-items:center;margin-top:10px;flex-wrap:wrap;font-size:12px;font-weight:600">
+        <span class="vstat"><span class="vdot drive"></span><span class="vlbl drive">Sürüş — hərəkətdə</span></span>
+        <span class="vstat"><span class="vdot park"></span><span class="vlbl park">Park (P) — dayanıb</span></span>
       </div>
       <div class="hint" style="margin-top:10px" id="gpsNote">Məlumat mənbəyi: Geekbro Fleet Tracking</div>
     </div>
@@ -1387,8 +1401,15 @@ function renderGpsData(drivers){
     const driveMin=d.dailyH||0;
     const idleMin=Math.round(d.idling||0);
     const col=km>=100?'var(--teal)':km>=50?'var(--blue)':km>0?'var(--amber)':'var(--red)';
+    const driving=(d.status==='ACTIVE');
+    const stCls=driving?'drive':'park';
+    const stTxt=driving?'Sürüş':'Park (P)';
+    const stTitle=driving?'Hərəkətdə (sürüş)':(d.status==='IDLING'?'Boş dayanma (mühərrik işləyir)':'Parkda / söndürülüb');
     h+=`<tr>
-      <td style="padding:10px 16px"><span class="plate"><span class="az"><small>AZ</small></span><span class="pn">${plate}</span></span></td>
+      <td style="padding:10px 16px">
+        <span class="vstat" title="${stTitle}"><span class="vdot ${stCls}"></span><span class="vlbl ${stCls}">${stTxt}</span></span>
+        <div style="margin-top:6px"><span class="plate"><span class="az"><small>AZ</small></span><span class="pn">${plate}</span></span></div>
+      </td>
       <td class="num" style="font-size:17px;font-weight:800;color:${col};transition:color .5s">${km.toFixed(2)} <small style="font-size:11px;font-weight:600;opacity:.55;color:var(--mut)">km</small></td>
       <td style="min-width:160px;padding:10px 12px">
         <div style="height:8px;background:#eef1f6;border-radius:6px;overflow:hidden;margin-bottom:3px">
@@ -1412,12 +1433,12 @@ function renderGpsData(drivers){
 function renderGpsStatic(){
   // Fallback static data while not connected
   const staticDrivers=[
-    {vehicle:{plateNumber:'77UZ539'},dailyKm:190.68,dailyH:272,idling:20},
-    {vehicle:{plateNumber:'77SP437'},dailyKm:102.73,dailyH:215,idling:7},
-    {vehicle:{plateNumber:'77UZ842'},dailyKm:60.98, dailyH:132,idling:3},
-    {vehicle:{plateNumber:'77UD140'},dailyKm:28.02, dailyH:49, idling:1},
-    {vehicle:{plateNumber:'77UD304'},dailyKm:14.27, dailyH:42, idling:9},
-    {vehicle:{plateNumber:'77BG699'},dailyKm:0,     dailyH:0,  idling:2},
+    {vehicle:{plateNumber:'77UZ539'},dailyKm:190.68,dailyH:272,idling:20,status:'ACTIVE'},
+    {vehicle:{plateNumber:'77SP437'},dailyKm:102.73,dailyH:215,idling:7,status:'ACTIVE'},
+    {vehicle:{plateNumber:'77UZ842'},dailyKm:60.98, dailyH:132,idling:3,status:'IDLING'},
+    {vehicle:{plateNumber:'77UD140'},dailyKm:28.02, dailyH:49, idling:1,status:'INACTIVE'},
+    {vehicle:{plateNumber:'77UD304'},dailyKm:14.27, dailyH:42, idling:9,status:'INACTIVE'},
+    {vehicle:{plateNumber:'77BG699'},dailyKm:0,     dailyH:0,  idling:2,status:'INACTIVE'},
   ];
   renderGpsData(staticDrivers);
   document.getElementById('gpsNote').textContent='Demo məlumat · Canlı data üçün Geekbro-ya daxil olun';
@@ -1464,7 +1485,12 @@ function switchTab(v){
   const view=document.getElementById('v-'+v);
   if(view) view.classList.add('on');
   document.getElementById('banner').style.display = v === 'ov' ? '' : 'none';
-  if(v==='gps') fetchGpsData();
+  // GPS auto-refresh: yalnız GPS view açıq olanda canlı durumu yenilə
+  if(window.gpsAutoTimer){clearInterval(window.gpsAutoTimer);window.gpsAutoTimer=null;}
+  if(v==='gps'){
+    fetchGpsData();
+    window.gpsAutoTimer=setInterval(()=>{if(!document.hidden) fetchGpsData();},30000);
+  }
   if(v==='avto'){
     alertsLastSeenCount=buildAlerts().filter(a=>a.sev==='crit').length;
     const mb=document.getElementById('mobBadge');
