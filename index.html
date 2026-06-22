@@ -138,41 +138,61 @@
   table.daily td.cell{position:relative}
 
   #ceOverlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9998;-webkit-tap-highlight-color:transparent}
-  #cellEditor{display:none;position:fixed;z-index:9999;background:#fff;border-radius:14px;
-    box-shadow:0 12px 40px rgba(15,28,48,.22);border:1px solid #d0daea;padding:16px;width:220px}
+  /* ── CELL EDITOR ── */
+  #cellEditor{display:none;position:fixed;z-index:9999;background:#fff;border-radius:18px;
+    box-shadow:0 16px 48px rgba(15,28,48,.22);border:1px solid #d0daea;padding:18px 18px 16px;width:292px;overflow:hidden}
   #cellEditor .ce-drag{display:none}
-  #cellEditor .ce-title{font-size:11px;font-weight:700;color:var(--mut);text-transform:uppercase;
-    letter-spacing:.06em;margin-bottom:10px}
-  #cellEditor input{width:100%;font:inherit;font-size:22px;font-weight:800;padding:8px 10px;
-    border:2px solid #d0daea;border-radius:9px;text-align:center;outline:none;color:var(--ink)}
-  #cellEditor input:focus{border-color:var(--teal)}
-  #cellEditor .ce-quick{display:flex;gap:5px;margin-top:9px}
-  #cellEditor .ce-quick button{flex:1;font:inherit;font-size:11px;font-weight:700;padding:6px 4px;
-    border-radius:7px;cursor:pointer;border:1px solid;touch-action:manipulation}
-  .ceq-i{background:#fef0d6;color:#8a5a08;border-color:#fde0a0!important}
+  /* header */
+  .ce-hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px}
+  .ce-title{font-size:11px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.06em;line-height:1.5;flex:1}
+  .ce-x{border:none;background:none;cursor:pointer;color:#b8c5d3;font-size:18px;padding:0;line-height:1;margin-left:8px;flex:0 0 auto;touch-action:manipulation}
+  .ce-x:hover{color:var(--ink)}
+  /* tabs */
+  .ce-tabs{display:flex;border-bottom:2px solid #eef1f6;margin:0 -18px 14px;padding:0 18px}
+  .ce-tab{flex:1;font:inherit;font-size:13px;font-weight:700;padding:8px 6px 10px;border:none;background:none;
+    cursor:pointer;color:var(--mut);border-bottom:2.5px solid transparent;margin-bottom:-2px;
+    transition:color .15s,border-color .15s;touch-action:manipulation;position:relative}
+  .ce-tab.on{color:var(--teal);border-bottom-color:var(--teal)}
+  .ce-xbadge{display:none;position:absolute;top:6px;right:8px;background:var(--red);color:#fff;
+    font-size:9px;font-weight:800;border-radius:999px;padding:1px 5px;line-height:14px}
+  .ce-xbadge.show{display:inline-block}
+  /* income panel */
+  #ceInput{width:100%;font:inherit;font-size:26px;font-weight:800;padding:10px;
+    border:2px solid #d0daea;border-radius:11px;text-align:center;outline:none;color:var(--ink);display:block;margin-bottom:10px}
+  #ceInput:focus{border-color:var(--teal)}
+  .ce-quick{display:flex;gap:6px;margin-bottom:10px}
+  .ce-quick button{flex:1;font:inherit;font-size:12px;font-weight:700;padding:8px 4px;
+    border-radius:8px;cursor:pointer;border:1.5px solid;touch-action:manipulation}
+  .ceq-i{background:#fef3e2;color:#8a5a08;border-color:#f6d996!important}
   .ceq-t{background:#ede9fd;color:#5038b0;border-color:#ddd6fe!important}
-  .ceq-0{background:#fde8e6;color:#9e2e25;border-color:#fcc!important}
-  .ceq-35{background:#e2f5ee;color:#0a5e50;border-color:#b4e4d4!important;font-size:13px!important}
-  #cellEditor .ce-btns{display:flex;gap:7px;margin-top:10px}
-  #cellEditor .ce-save{flex:1;font:inherit;font-size:13px;font-weight:700;padding:8px;
-    border-radius:8px;border:0;background:var(--teal);color:#fff;cursor:pointer;touch-action:manipulation}
-  #cellEditor .ce-save:hover{background:#178a7d}
-  #cellEditor .ce-reset{font:inherit;font-size:12px;font-weight:600;padding:8px 9px;
-    border-radius:8px;border:1px solid #e0e6f0;background:#f5f7fb;color:var(--mut);cursor:pointer;touch-action:manipulation}
-  #cellEditor .ce-close{font:inherit;font-size:12px;font-weight:600;padding:8px 9px;
-    border-radius:8px;border:1px solid #e0e6f0;background:#f5f7fb;color:var(--mut);cursor:pointer;touch-action:manipulation}
-  /* Cell editor — xərc bölməsi */
-  .ce-sep{height:1px;background:#eef1f6;margin:12px -16px 10px}
-  .ce-exp-lab{font-size:10px;font-weight:700;color:var(--mut);letter-spacing:.05em;text-transform:uppercase;margin-bottom:7px;display:flex;justify-content:space-between;align-items:center}
-  .ce-exp-item{display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:1px solid #f0f3f8;font-size:12px}
+  .ceq-0{background:#fde8e6;color:#9e2e25;border-color:#fca9a3!important}
+  .ceq-35{background:#e2f5ee;color:#0a5e50;border-color:#a5ddc9!important;font-size:13px!important}
+  .ce-btns{display:flex;gap:7px}
+  .ce-save{flex:1;font:inherit;font-size:13px;font-weight:700;padding:10px;
+    border-radius:9px;border:0;background:var(--teal);color:#fff;cursor:pointer;touch-action:manipulation}
+  .ce-save:active{background:#178a7d}
+  .ce-reset,.ce-close{font:inherit;font-size:12px;font-weight:600;padding:10px 11px;
+    border-radius:9px;border:1.5px solid #dde4ef;background:#f5f8fd;color:var(--mut);cursor:pointer;touch-action:manipulation}
+  /* expense panel */
+  .ce-sheet-card{background:#fffbf0;border:1.5px solid #f0d070;border-radius:10px;padding:10px 12px;margin-bottom:12px}
+  .ce-sheet-ttl{font-size:10px;font-weight:700;color:#8a6400;letter-spacing:.04em;text-transform:uppercase;margin-bottom:4px}
+  .ce-sheet-amt{font-size:20px;font-weight:800;color:#7A5A00}
+  .ce-sheet-note{font-size:12px;color:#a08030;margin-top:3px}
+  .ce-day-lbl{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--mut);margin:0 0 6px}
+  .ce-exp-item{display:flex;align-items:center;gap:7px;padding:7px 0;border-bottom:1px solid #f0f3f8}
   .ce-exp-item:last-child{border-bottom:none}
-  .ce-exp-item .ci-amt{font-weight:800;min-width:46px}
-  .ce-exp-item .ci-note{color:var(--mut);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .ce-exp-item .ci-del{border:none;background:none;cursor:pointer;color:var(--red);font-size:14px;padding:0 2px;line-height:1;flex:0 0 auto}
-  .ce-exp-addrow{display:flex;gap:4px;margin-top:8px;align-items:center}
-  .ce-exp-addrow input,.ce-exp-addrow select{font:inherit;font-size:11px;border:1.5px solid #d0daea;border-radius:7px;padding:5px 6px;outline:none;color:var(--ink)}
-  .ce-exp-addrow input:focus,.ce-exp-addrow select:focus{border-color:var(--teal)}
-  .ce-exp-plus{background:var(--teal);color:#fff;border:none;border-radius:7px;width:28px;height:28px;flex:0 0 28px;cursor:pointer;font-weight:800;font-size:17px;line-height:1;touch-action:manipulation}
+  .ci-amt{font-size:14px;font-weight:800;white-space:nowrap;min-width:48px}
+  .ci-note{flex:1;font-size:12px;color:var(--mut);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ci-del{border:none;background:none;cursor:pointer;color:#ccd4e0;font-size:15px;padding:0 2px;line-height:1;transition:color .1s;touch-action:manipulation}
+  .ci-del:hover{color:var(--red)}
+  .ce-addform{margin-top:12px;border-top:1.5px solid #eef1f6;padding-top:12px}
+  .ce-addrow{display:flex;gap:7px;margin-bottom:7px}
+  .ce-addrow input,.ce-addrow select{font:inherit;font-size:12px;border:1.5px solid #d5dee9;border-radius:8px;padding:7px 9px;outline:none;color:var(--ink);background:#fff;min-width:0}
+  .ce-addrow input:focus,.ce-addrow select:focus{border-color:var(--teal)}
+  .ce-addrow .ca-amt{width:76px;flex:0 0 76px;font-weight:700;text-align:center}
+  .ce-addrow .ca-cat{flex:1}
+  .ce-addrow .ca-note{flex:1}
+  .ce-addrow .ca-add{background:var(--teal);color:#fff;border:none;border-radius:8px;width:34px;flex:0 0 34px;cursor:pointer;font-weight:800;font-size:18px;line-height:1;touch-action:manipulation}
   /* Daily table expense columns */
   table.daily th.xh{color:var(--red)}
   table.daily td.xc{color:var(--red);font-weight:700;cursor:pointer;text-align:right}
@@ -186,19 +206,19 @@
   @media(min-width:641px){.xrc-panel{border-radius:16px}}
   @media(max-width:640px){
     #cellEditor{position:fixed!important;bottom:0!important;left:0!important;right:0!important;
-      top:auto!important;width:100%!important;border-radius:20px 20px 0 0;border-bottom:0;
-      padding:12px 20px calc(28px + env(safe-area-inset-bottom));
-      transform:translateY(105%);transition:transform .26s cubic-bezier(.4,0,.2,1)}
+      top:auto!important;width:100%!important;border-radius:22px 22px 0 0;border-bottom:0;
+      padding:10px 20px calc(24px + env(safe-area-inset-bottom)) 20px;
+      transform:translateY(105%);transition:transform .28s cubic-bezier(.4,0,.2,1)}
     #cellEditor.ce-open{transform:translateY(0)}
-    #cellEditor .ce-drag{display:block;width:40px;height:4px;background:#d0daea;border-radius:2px;margin:0 auto 14px}
-    #cellEditor .ce-title{font-size:12px;text-align:center}
-    #cellEditor input{font-size:30px;padding:14px 10px;border-radius:12px}
-    #cellEditor .ce-quick{gap:10px;margin-top:14px}
-    #cellEditor .ce-quick button{padding:16px 4px;font-size:14px;border-radius:12px}
+    #cellEditor .ce-drag{display:block;width:36px;height:4px;background:#d5dee9;border-radius:2px;margin:0 auto 12px}
+    .ce-title{font-size:12px}
+    #ceInput{font-size:32px;padding:14px;border-radius:13px}
+    .ce-quick{gap:10px}
+    .ce-quick button{padding:14px 4px;font-size:14px;border-radius:11px}
     .ceq-35{font-size:15px!important}
-    #cellEditor .ce-btns{gap:10px;margin-top:14px}
-    #cellEditor .ce-save{padding:16px;font-size:16px;border-radius:12px}
-    #cellEditor .ce-reset,#cellEditor .ce-close{padding:16px 14px;font-size:14px;border-radius:12px}
+    .ce-btns{gap:10px;margin-top:2px}
+    .ce-save{padding:15px;font-size:16px;border-radius:11px}
+    .ce-reset,.ce-close{padding:15px 12px;font-size:14px;border-radius:11px}
   }
   table.daily td.tot{
     font-weight:800;background:#f0f5fb;min-width:72px;
@@ -670,37 +690,52 @@
     </div>
   </section>
 
-  <!-- CELL EDITOR POPUP -->
+  <!-- CELL EDITOR -->
   <div id="ceOverlay" onclick="ceClose()"></div>
   <div id="cellEditor">
     <div class="ce-drag"></div>
-    <div class="ce-title" id="ceTitle">Ödəniş daxil et</div>
-    <input id="ceInput" type="text" inputmode="decimal" placeholder="30" />
-    <div class="ce-quick">
-      <button type="button" class="ceq-35" onclick="ceSetSpecial(35)">35 ₼</button>
-      <button type="button" class="ceq-i" onclick="ceSetSpecial('i')">İ</button>
-      <button type="button" class="ceq-t" onclick="ceSetSpecial('t')">T</button>
-      <button type="button" class="ceq-0" onclick="ceSetSpecial(0)">0</button>
+    <div class="ce-hdr">
+      <div class="ce-title" id="ceTitle"></div>
+      <button class="ce-x" onclick="ceClose()" type="button">✕</button>
     </div>
-    <div class="ce-btns">
-      <button type="button" class="ce-save" onclick="ceSave()">Saxla</button>
-      <button type="button" class="ce-reset" onclick="ceReset()">Sıfırla</button>
-      <button type="button" class="ce-close" onclick="ceClose()">Ləğv</button>
+    <div class="ce-tabs">
+      <button class="ce-tab on" id="ceTabGel" onclick="ceTab('gel')" type="button">Gəlir</button>
+      <button class="ce-tab" id="ceTabXrc" onclick="ceTab('xrc')" type="button">
+        Xərc<span class="ce-xbadge" id="ceXrcBadge"></span>
+      </button>
     </div>
-    <div class="ce-sep"></div>
-    <div class="ce-exp-lab">
-      <span>Xərclər</span>
-      <span id="ceDayExpTotal" style="color:var(--red);font-weight:800"></span>
+    <!-- Gəlir paneli -->
+    <div id="cePanelGel">
+      <input id="ceInput" type="text" inputmode="decimal" placeholder="30" />
+      <div class="ce-quick">
+        <button type="button" class="ceq-35" onclick="ceSetSpecial(35)">35 ₼</button>
+        <button type="button" class="ceq-i" onclick="ceSetSpecial('i')">İ</button>
+        <button type="button" class="ceq-t" onclick="ceSetSpecial('t')">T</button>
+        <button type="button" class="ceq-0" onclick="ceSetSpecial(0)">0</button>
+      </div>
+      <div class="ce-btns">
+        <button type="button" class="ce-save" onclick="ceSave()">Saxla</button>
+        <button type="button" class="ce-reset" onclick="ceReset()">Sıfırla</button>
+        <button type="button" class="ce-close" onclick="ceClose()">Ləğv</button>
+      </div>
     </div>
-    <div id="ceDayExpList"></div>
-    <div class="ce-exp-addrow">
-      <input id="ceExpAmt" type="number" inputmode="decimal" placeholder="₼" style="width:56px;flex:0 0 56px">
-      <select id="ceExpCat" style="flex:1;min-width:0">
-        <option>Yağ</option><option>Ehtiyat</option><option>Təmir</option>
-        <option>Sığorta</option><option>Cərimə</option><option>Digər</option>
-      </select>
-      <input id="ceExpNote" type="text" placeholder="Qeyd" style="flex:1.2;min-width:0">
-      <button class="ce-exp-plus" onclick="ceAddExp()" type="button">+</button>
+    <!-- Xərc paneli -->
+    <div id="cePanelXrc" style="display:none">
+      <div id="ceSheetExp"></div>
+      <div id="ceDayExpList"></div>
+      <div class="ce-addform">
+        <div class="ce-addrow">
+          <input id="ceExpAmt" class="ca-amt" type="number" inputmode="decimal" placeholder="₼">
+          <select id="ceExpCat" class="ca-cat">
+            <option>Yağ</option><option>Ehtiyat</option><option>Təmir</option>
+            <option>Sığorta</option><option>Cərimə</option><option>Digər</option>
+          </select>
+        </div>
+        <div class="ce-addrow">
+          <input id="ceExpNote" class="ca-note" type="text" placeholder="Qeyd (istəyə bağlı)">
+          <button class="ca-add" onclick="ceAddExp()" type="button">+</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -964,24 +999,51 @@ function sheetExpRow(plate,mFull){
   return mData?mData.rows.find(r=>aliasPlate(r.p)===ap):null;
 }
 
+function ceTab(t){
+  document.getElementById('cePanelGel').style.display=t==='gel'?'':'none';
+  document.getElementById('cePanelXrc').style.display=t==='xrc'?'':'none';
+  document.getElementById('ceTabGel').classList.toggle('on',t==='gel');
+  document.getElementById('ceTabXrc').classList.toggle('on',t==='xrc');
+  if(t==='xrc') renderCeDayExp();
+}
+
 function renderCeDayExp(){
+  // Sheet-dən gələn aylıq xərc
+  const sRow=sheetExpRow(_ce.plate,_ce.mFull);
+  const sheetExp=sRow?(sRow.exp||0):0;
+  const sheetNote=sRow?(sRow.expNote||''):'';
+  const sheetEl=document.getElementById('ceSheetExp');
+  if(sheetExp>0){
+    sheetEl.innerHTML=`<div class="ce-sheet-card">
+      <div class="ce-sheet-ttl">Cədvəldən · ${_ce.mFull}</div>
+      <div class="ce-sheet-amt">${fmt(sheetExp)} ₼</div>
+      ${sheetNote?`<div class="ce-sheet-note">${sheetNote}</div>`:''}
+    </div>`;
+  } else { sheetEl.innerHTML=''; }
+  // Bu gün üçün manual xərclər
   const items=expForPlateDate(_ce.plate,_ceDate);
-  const tot=items.reduce((s,e)=>s+e.amount,0);
-  document.getElementById('ceDayExpTotal').textContent=tot>0?fmt(tot)+' ₼':'';
+  const dayTot=items.reduce((s,e)=>s+e.amount,0);
+  // Badge yenilə
+  const totalExp=sheetExp+expTotalForPlateMonth(_ce.plate,_ce.mFull);
+  const badge=document.getElementById('ceXrcBadge');
+  badge.textContent=totalExp>0?fmt(totalExp)+'₼':'';
+  badge.classList.toggle('show',totalExp>0);
+  // Siyahı
   const listEl=document.getElementById('ceDayExpList');
   if(!items.length){
-    listEl.innerHTML='<div style="color:var(--mut);font-size:11px;padding:3px 0 5px">Xərc yoxdur</div>';
+    listEl.innerHTML=`<div style="color:var(--mut);font-size:12px;padding:6px 0 2px;text-align:center">Bu gün üçün xərc yoxdur</div>`;
     return;
   }
-  listEl.innerHTML=items.map(e=>{
-    const cc=EXP_CATS[e.cat]||EXP_CATS['Digər'];
-    return `<div class="ce-exp-item">
-      <span class="ci-amt">${fmt(e.amount)} ₼</span>
-      <span class="exp-cat" style="background:${cc.bg};color:${cc.col};font-size:10px;padding:1px 6px">${e.cat}</span>
-      <span class="ci-note">${e.note||''}</span>
-      <button class="ci-del" onclick="ceDelExp('${e.id}')" type="button">✕</button>
-    </div>`;
-  }).join('');
+  listEl.innerHTML=`<div class="ce-day-lbl">Bu gün · ${fmt(dayTot)} ₼</div>`+
+    items.map(e=>{
+      const cc=EXP_CATS[e.cat]||EXP_CATS['Digər'];
+      return `<div class="ce-exp-item">
+        <span class="ci-amt">${fmt(e.amount)} ₼</span>
+        <span class="exp-cat" style="background:${cc.bg};color:${cc.col};font-size:10px;padding:1px 7px">${e.cat}</span>
+        <span class="ci-note">${e.note||''}</span>
+        <button class="ci-del" onclick="ceDelExp('${e.id}')" type="button">✕</button>
+      </div>`;
+    }).join('');
 }
 function ceAddExp(){
   const amt=parseFloat(document.getElementById('ceExpAmt').value)||0;
@@ -1058,8 +1120,15 @@ function ceOpen(el,mFull,plate,di,orig){
   const ed=document.getElementById('cellEditor');
   const ov=document.getElementById('ceOverlay');
   const [a,b,c]=plate.split('-');
-  const ts=dailyOvTimes[ovKey(mFull,plate,di)];
-  document.getElementById('ceTitle').textContent=`${a}-${b}-${c} · ${mFull} · ${di+1}-ci gün`+(ts?`\n${fmtTime(ts)}`:'');
+  document.getElementById('ceTitle').textContent=`${a}-${b}-${c} · ${mFull} · ${di+1}-ci gün`;
+  ceTab('gel'); // hər dəfə Gəlir tabından başla — badge update üçün renderCeDayExp lazımdır
+  // badge üçün əvvəlcədən hesabla
+  const sRow=sheetExpRow(plate,mFull);
+  const sheetExp=sRow?(sRow.exp||0):0;
+  const totalExp=sheetExp+expTotalForPlateMonth(plate,mFull);
+  const badge=document.getElementById('ceXrcBadge');
+  badge.textContent=totalExp>0?fmt(totalExp)+'₼':'';
+  badge.classList.toggle('show',totalExp>0);;
   const inp=document.getElementById('ceInput');
   inp.value=(eff===''||eff===null||eff===undefined)?String(DEFAULT_PAY):String(eff);
   if(isMobile()){
@@ -1076,7 +1145,6 @@ function ceOpen(el,mFull,plate,di,orig){
     ed.style.left=left+'px'; ed.style.top=top+'px';
     inp.focus(); inp.select();
   }
-  renderCeDayExp();
 }
 function ceClose(){
   const ed=document.getElementById('cellEditor');
