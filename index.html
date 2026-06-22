@@ -967,6 +967,18 @@ function gsWrite(mFull, plate, di, val){
     setTimeout(()=>st.style.display='none', 3000);
   });
 }
+function gsWriteExpense(entry, isDel){
+  if(!gsUrl) return;
+  const params = isDel
+    ? {action:'expense', id:entry.id, del:'true'}
+    : {action:'expense', id:entry.id, plate:entry.plate, date:entry.date,
+       amount:String(entry.amount), cat:entry.cat, note:entry.note||''};
+  fetch(gsUrl, {method:'POST', body: new URLSearchParams(params)})
+    .then(r=>r.json())
+    .then(j=>{ if(!j.ok) console.warn('Rasxod yazma xəta:', j.err); })
+    .catch(e => console.warn('Rasxod şəbəkə xəta:', e.message));
+}
+
 function gsSetup(){
   const u=prompt('Google Apps Script Web App URL-ni yapışdırın\n(boş buraxsanız sinxronizasiya söndürülür):', gsUrl);
   if(u===null) return;
@@ -1589,7 +1601,7 @@ const _origSwitchTabForGps = typeof switchTab === 'function' ? switchTab : null;
 })();
 
 // ============ RASXODLAR ============
-let expenseLog = JSON.parse(localStorage.getItem('expenseLog') || '[]');
+let expenseLog = []; // Sheets-dən yüklənir
 const EXP_CATS = {
   'Yağ dəyişimi':    {bg:'#FFF3CD',col:'#7A5A00'},
   'Ehtiyat hissəsi': {bg:'#DBEAFE',col:'#1E40AF'},
@@ -1637,21 +1649,25 @@ function expSave(){
   if(!plate || !date || amount <= 0){ alert('Maşın, tarix və məbləğ tələb olunur'); return; }
   const ov = document.getElementById('expOv');
   const editId = ov.dataset.editId;
+  let entry;
   if(editId){
     const idx = expenseLog.findIndex(x => x.id === editId);
-    if(idx >= 0) expenseLog[idx] = {...expenseLog[idx], plate, date, cat, amount, note};
+    entry = {...(expenseLog[idx]||{}), plate, date, cat, amount, note};
+    if(idx >= 0) expenseLog[idx] = entry;
   } else {
-    expenseLog.push({id: Date.now().toString(36)+Math.random().toString(36).slice(2,6), plate, date, cat, amount, note});
+    entry = {id: Date.now().toString(36)+Math.random().toString(36).slice(2,6), plate, date, cat, amount, note};
+    expenseLog.push(entry);
   }
-  localStorage.setItem('expenseLog', JSON.stringify(expenseLog));
+  gsWriteExpense(entry, false);
   expClose();
   renderExpenses();
 }
 
 function expDelete(id){
   if(!confirm('Bu rasxodu silmək istəyirsiniz?')) return;
+  const entry = expenseLog.find(x => x.id === id);
   expenseLog = expenseLog.filter(x => x.id !== id);
-  localStorage.setItem('expenseLog', JSON.stringify(expenseLog));
+  if(entry) gsWriteExpense(entry, true);
   renderExpenses();
 }
 
@@ -1874,15 +1890,18 @@ async function loadLive(){
     )).json();
     if(mj.error) throw new Error(mj.error.message);
 
-    const monthNames = mj.sheets.map(s => s.properties.title)
+    const allSheetTitles = mj.sheets.map(s => s.properties.title);
+    const monthNames = allSheetTitles
       .filter(n => { const p=n.split(' '); return p.length===2 && AZ_MON[p[0]] && /^\d{4}$/.test(p[1]); })
       .sort((a,b) => {
         const [am,ay]=a.split(' '), [bm,by]=b.split(' ');
         return (parseInt(ay)*100+AZ_MON[am]) - (parseInt(by)*100+AZ_MON[bm]);
       });
+    const hasExpSheet = allSheetTitles.includes('Rasxodlar');
 
     // Bütün məlumatları TEK batchGet sorğusu ilə al (API kvotasını qorumaq üçün)
     const allRanges = ['HESABAT!A2:I12','Avtomobil!A3:N12',
+      ...(hasExpSheet ? ['Rasxodlar!A2:G500'] : []),
       ...monthNames.map(n => n+'!A1:AJ15')];
     const batchUrl = BASE_URL+'/values:batchGet?'+
       allRanges.map(r => 'ranges='+encodeURIComponent(r)).join('&')+
@@ -1892,7 +1911,9 @@ async function loadLive(){
     const vr = bj.valueRanges || [];
     const hRows = (vr[0]||{}).values || [];
     const aRows = (vr[1]||{}).values || [];
-    const mRows = vr.slice(2).map(v => (v||{}).values || []);
+    const rRows = hasExpSheet ? ((vr[2]||{}).values || []) : [];
+    const mOffset = hasExpSheet ? 3 : 2;
+    const mRows = vr.slice(mOffset).map(v => (v||{}).values || []);
 
     const nc = parseHesabat(hRows);
     const na = parseAvtomobil(aRows);
@@ -1906,6 +1927,16 @@ async function loadLive(){
     if(na.length) avto = na;
     if(nm.length) months = nm;
     if(nd.length) daily = nd;
+    if(rRows.length){
+      expenseLog = rRows.map(r => ({
+        id:     String(r[0]||''),
+        plate:  String(r[1]||''),
+        date:   String(r[2]||''),
+        amount: parseNum(r[3]),
+        cat:    String(r[4]||'Digər'),
+        note:   String(r[5]||'')
+      })).filter(e => e.id && e.plate && e.amount > 0);
+    }
 
     const d = TODAY, pad = n => n.toString().padStart(2,'0');
     document.getElementById('today').textContent =
