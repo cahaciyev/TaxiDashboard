@@ -394,12 +394,36 @@
   .hdr-scene canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
   @media(max-width:420px){.hdr-scene{display:none}}
 
+  /* ===== RASXODLAR ===== */
+  .exp-tbl{width:100%;border-collapse:separate;border-spacing:0;font-size:13px}
+  .exp-tbl th{background:#f6f8fc;padding:9px 14px;text-align:left;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--mut);border-bottom:2px solid #e0e8f0;white-space:nowrap}
+  .exp-tbl th.r,.exp-tbl td.r{text-align:right}
+  .exp-tbl td{padding:9px 14px;border-bottom:1px solid #eef1f6;vertical-align:middle}
+  .exp-tbl tbody tr:last-child td{border-bottom:none}
+  .exp-tbl tbody tr:hover td{background:#f8fafd}
+  .exp-tbl .tot-row td{font-weight:800;border-top:2px solid #d0daea;border-bottom:none}
+  .exp-cat{display:inline-block;padding:2px 9px;border-radius:6px;font-size:11px;font-weight:700}
+  .exp-add-btn{background:var(--teal);color:#fff;border:none;border-radius:10px;padding:8px 18px;font:inherit;font-size:13px;font-weight:700;cursor:pointer}
+  /* Rasxod modal */
+  .exp-ov{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:900;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
+  .exp-ov.open{opacity:1;pointer-events:auto}
+  .exp-sheet{background:#fff;border-radius:18px;padding:24px;width:100%;max-width:440px;max-height:92vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+  .exp-fld{margin-bottom:14px}
+  .exp-fld label{display:block;font-size:11px;font-weight:700;color:var(--mut);margin-bottom:5px;letter-spacing:.05em;text-transform:uppercase}
+  .exp-fld input,.exp-fld select,.exp-fld textarea{width:100%;border:1.5px solid #d0daea;border-radius:9px;padding:9px 12px;font:inherit;font-size:13px;color:var(--ink);background:#fff;outline:none}
+  .exp-fld input:focus,.exp-fld select:focus{border-color:var(--teal)}
+  .exp-modal-actions{display:flex;gap:10px;margin-top:6px}
+  .exp-modal-actions button{flex:1;border:none;border-radius:9px;padding:11px;font:inherit;font-weight:700;cursor:pointer;font-size:13px}
+  .exp-btn-save{background:var(--teal);color:#fff}
+  .exp-btn-cancel{background:#eef1f6;color:var(--ink)}
+
   /* ===== MOBİL ALT NAVİQASİYA (WhatsApp stili) ===== */
   .mob-nav{
     display:none;position:fixed;bottom:0;left:0;right:0;z-index:300;
     background:#fff;border-top:1px solid #dde4ef;
     box-shadow:0 -4px 20px rgba(15,28,48,.12);
-    padding-bottom:env(safe-area-inset-bottom,0)
+    padding-bottom:env(safe-area-inset-bottom,0);
+    overflow-x:auto
   }
   .mnb{
     flex:1;display:flex;flex-direction:column;align-items:center;
@@ -455,10 +479,55 @@
       <button data-v="daily">Günlük ödənişlər</button>
       <button data-v="cars">Maşınlar</button>
       <button data-v="avto">Avtomobil & Bildirişlər</button>
+      <button data-v="exp">Rasxodlar</button>
       <button data-v="gps">GPS &middot; Günlük</button>
     </div>
   </div>
 </header>
+
+<!-- RASXOD MODAL -->
+<div class="exp-ov" id="expOv" onclick="if(event.target===this)expClose()">
+  <div class="exp-sheet">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
+      <h3 style="font-size:16px;font-weight:800" id="expModalTitle">Rasxod əlavə et</h3>
+      <button onclick="expClose()" style="border:none;background:none;font-size:20px;cursor:pointer;color:var(--mut);line-height:1">✕</button>
+    </div>
+    <div class="exp-fld">
+      <label>Maşın</label>
+      <select id="expPlate"></select>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="exp-fld">
+        <label>Tarix</label>
+        <input type="date" id="expDate">
+      </div>
+      <div class="exp-fld">
+        <label>Məbləğ (₼)</label>
+        <input type="number" id="expAmt" placeholder="0" min="0" step="0.01">
+      </div>
+    </div>
+    <div class="exp-fld">
+      <label>Kateqoriya</label>
+      <select id="expCat">
+        <option>Yağ dəyişimi</option>
+        <option>Ehtiyat hissəsi</option>
+        <option>Təmir</option>
+        <option>Sığorta</option>
+        <option>Cərimə ödənişi</option>
+        <option>Yuyulma</option>
+        <option>Digər</option>
+      </select>
+    </div>
+    <div class="exp-fld">
+      <label>Qeyd (istəyə bağlı)</label>
+      <input type="text" id="expNote" placeholder="məs. Motor yağı 5L">
+    </div>
+    <div class="exp-modal-actions">
+      <button class="exp-btn-cancel" onclick="expClose()">Ləğv et</button>
+      <button class="exp-btn-save" onclick="expSave()">Yadda saxla</button>
+    </div>
+  </div>
+</div>
 
 <!-- CƏRIMƏ MODAL -->
 <div class="fine-ov" id="fineOv" onclick="if(event.target===this)closeFineModal()">
@@ -500,6 +569,10 @@
     <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
     <span class="lbl">Bildirişlər</span>
     <span class="mbadge" id="mobBadge"></span>
+  </button>
+  <button class="mnb" data-v="exp">
+    <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>
+    <span class="lbl">Rasxod</span>
   </button>
   <button class="mnb" data-v="gps">
     <svg viewBox="0 0 24 24"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
@@ -598,6 +671,24 @@
     <div class="sec-h"><h2>Avtomobil vəziyyəti</h2></div>
     <div class="panel" style="overflow-x:auto">
       <table class="atbl" id="avtoTbl"></table>
+    </div>
+  </section>
+
+  <!-- RASXODLAR -->
+  <section class="view" id="v-exp">
+    <div class="sec-h">
+      <h2>Aylıq xərclər (Sheets)</h2>
+      <span class="hint">Aylıq vərəqlərdəki gəlir / xərc / xalis</span>
+    </div>
+    <div class="panel" style="margin-bottom:18px;overflow-x:auto">
+      <table class="exp-tbl" id="expSheetTbl"></table>
+    </div>
+    <div class="sec-h" style="margin-top:4px">
+      <h2>Əlavə rasxodlar</h2>
+      <button class="exp-add-btn" onclick="expOpen()">+ Əlavə et</button>
+    </div>
+    <div class="panel" style="margin-top:0">
+      <div id="expList"></div>
     </div>
   </section>
 
@@ -1497,8 +1588,148 @@ const _origSwitchTabForGps = typeof switchTab === 'function' ? switchTab : null;
   await fetchGpsData();
 })();
 
+// ============ RASXODLAR ============
+let expenseLog = JSON.parse(localStorage.getItem('expenseLog') || '[]');
+const EXP_CATS = {
+  'Yağ dəyişimi':    {bg:'#FFF3CD',col:'#7A5A00'},
+  'Ehtiyat hissəsi': {bg:'#DBEAFE',col:'#1E40AF'},
+  'Təmir':           {bg:'#EDE9FE',col:'#5B21B6'},
+  'Sığorta':         {bg:'#D1FAE5',col:'#065F46'},
+  'Cərimə ödənişi':  {bg:'#FEE2E2',col:'#991B1B'},
+  'Yuyulma':         {bg:'#E0F2FE',col:'#0369A1'},
+  'Digər':           {bg:'#F1F5F9',col:'#475569'}
+};
+
+function expOpen(id){
+  const ov = document.getElementById('expOv');
+  const plateEl = document.getElementById('expPlate');
+  plateEl.innerHTML = (cars||[]).map(c => `<option value="${c.p}">${c.p} (${c.o})</option>`).join('');
+  const today = new Date();
+  document.getElementById('expDate').value = today.toISOString().slice(0,10);
+  document.getElementById('expAmt').value = '';
+  document.getElementById('expNote').value = '';
+  document.getElementById('expCat').selectedIndex = 0;
+  document.getElementById('expModalTitle').textContent = id ? 'Rasxodu düzəlt' : 'Rasxod əlavə et';
+  ov.dataset.editId = id || '';
+  if(id){
+    const e = expenseLog.find(x => x.id === id);
+    if(e){
+      plateEl.value = e.plate;
+      document.getElementById('expDate').value = e.date;
+      document.getElementById('expCat').value = e.cat;
+      document.getElementById('expAmt').value = e.amount;
+      document.getElementById('expNote').value = e.note || '';
+    }
+  }
+  ov.classList.add('open');
+}
+
+function expClose(){
+  document.getElementById('expOv').classList.remove('open');
+}
+
+function expSave(){
+  const plate  = document.getElementById('expPlate').value;
+  const date   = document.getElementById('expDate').value;
+  const cat    = document.getElementById('expCat').value;
+  const amount = parseFloat(document.getElementById('expAmt').value) || 0;
+  const note   = document.getElementById('expNote').value.trim();
+  if(!plate || !date || amount <= 0){ alert('Maşın, tarix və məbləğ tələb olunur'); return; }
+  const ov = document.getElementById('expOv');
+  const editId = ov.dataset.editId;
+  if(editId){
+    const idx = expenseLog.findIndex(x => x.id === editId);
+    if(idx >= 0) expenseLog[idx] = {...expenseLog[idx], plate, date, cat, amount, note};
+  } else {
+    expenseLog.push({id: Date.now().toString(36)+Math.random().toString(36).slice(2,6), plate, date, cat, amount, note});
+  }
+  localStorage.setItem('expenseLog', JSON.stringify(expenseLog));
+  expClose();
+  renderExpenses();
+}
+
+function expDelete(id){
+  if(!confirm('Bu rasxodu silmək istəyirsiniz?')) return;
+  expenseLog = expenseLog.filter(x => x.id !== id);
+  localStorage.setItem('expenseLog', JSON.stringify(expenseLog));
+  renderExpenses();
+}
+
+function renderExpenseSheet(){
+  const el = document.getElementById('expSheetTbl');
+  if(!el) return;
+  if(!months.length){
+    el.innerHTML = '<tr><td class="hint" style="padding:16px">Sheets məlumatı hələ yüklənməyib.</td></tr>';
+    return;
+  }
+  let h = '<thead><tr><th>Ay</th><th class="r">Gəlir</th><th class="r">Xərc</th><th class="r">Xalis</th></tr></thead><tbody>';
+  months.forEach(m => {
+    const [label, inc, exp, net] = m;
+    h += `<tr>
+      <td style="font-weight:700">${label}</td>
+      <td class="r">${fmt(inc)} ₼</td>
+      <td class="r" style="color:var(--red)">${exp ? fmt(exp)+' ₼' : '—'}</td>
+      <td class="r" style="color:${net>=0?'var(--teal)':'var(--red)'};font-weight:700">${fmt(net)} ₼</td>
+    </tr>`;
+  });
+  const totInc = months.reduce((s,m) => s+m[1], 0);
+  const totExp = months.reduce((s,m) => s+m[2], 0);
+  const totNet = months.reduce((s,m) => s+m[3], 0);
+  h += `<tr class="tot-row">
+    <td>Cəmi</td>
+    <td class="r">${fmt(totInc)} ₼</td>
+    <td class="r" style="color:var(--red)">${fmt(totExp)} ₼</td>
+    <td class="r" style="color:${totNet>=0?'var(--teal)':'var(--red)'}">${fmt(totNet)} ₼</td>
+  </tr></tbody>`;
+  el.innerHTML = h;
+}
+
+function renderExpenses(){
+  renderExpenseSheet();
+  const el = document.getElementById('expList');
+  if(!el) return;
+  if(!expenseLog.length){
+    el.innerHTML = '<div style="text-align:center;padding:28px 0;color:var(--mut);font-size:14px">Hələ heç bir rasxod əlavə edilməyib.<br><span style="font-size:12px">Yuxarıdakı "+ Əlavə et" düyməsindən istifadə edin.</span></div>';
+    return;
+  }
+  // Maşın üzrə cəm
+  const byPlate = {};
+  expenseLog.forEach(e => { byPlate[e.plate] = (byPlate[e.plate]||0) + e.amount; });
+  let summary = '<div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px">';
+  Object.entries(byPlate).sort((a,b) => b[1]-a[1]).forEach(([p,s]) => {
+    const owner = (cars||[]).find(c=>c.p===p);
+    const col = owner ? (ownerColor[owner.o]||'#6B7C93') : '#6B7C93';
+    summary += `<div style="background:#fff;border:1.5px solid ${col}33;border-left:4px solid ${col};border-radius:10px;padding:9px 14px;min-width:140px">
+      <div style="font-size:11px;font-weight:700;color:${col};margin-bottom:2px">${p}</div>
+      <div style="font-size:16px;font-weight:800">${fmt(s)} ₼</div>
+    </div>`;
+  });
+  summary += '</div>';
+  const sorted = [...expenseLog].sort((a,b) => b.date.localeCompare(a.date));
+  let h = '<table class="exp-tbl" style="width:100%"><thead><tr><th>Tarix</th><th>Maşın</th><th>Kateqoriya</th><th class="r">Məbləğ</th><th>Qeyd</th><th></th></tr></thead><tbody>';
+  sorted.forEach(e => {
+    const cc = EXP_CATS[e.cat] || EXP_CATS['Digər'];
+    const d = e.date.split('-').reverse().join('.');
+    h += `<tr>
+      <td style="color:var(--mut);white-space:nowrap;font-size:12px">${d}</td>
+      <td style="font-weight:700">${e.plate}</td>
+      <td><span class="exp-cat" style="background:${cc.bg};color:${cc.col}">${e.cat}</span></td>
+      <td class="r" style="font-weight:700;white-space:nowrap">${fmt(e.amount)} ₼</td>
+      <td style="color:var(--mut);font-size:12px;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e.note||''}</td>
+      <td style="white-space:nowrap">
+        <button onclick="expOpen('${e.id}')" style="border:none;background:none;cursor:pointer;color:var(--blue);font-size:12px;font-weight:700;padding:2px 5px">✏</button>
+        <button onclick="expDelete('${e.id}')" style="border:none;background:none;cursor:pointer;color:var(--red);font-size:12px;font-weight:700;padding:2px 5px">✕</button>
+      </td>
+    </tr>`;
+  });
+  const total = expenseLog.reduce((s,e) => s+e.amount, 0);
+  h += `<tr class="tot-row"><td colspan="3" style="padding-top:10px">Əlavə rasxodlar cəmi</td><td class="r" style="padding-top:10px">${fmt(total)} ₼</td><td colspan="2"></td></tr>`;
+  h += '</tbody></table>';
+  el.innerHTML = summary + h;
+}
+
 // ============ RENDER ALL ============
-function renderAll(){ updateKpis(); renderAlerts(); draw(curK); renderCars(curOwner); renderDaily(); renderAvto(); }
+function renderAll(){ updateKpis(); renderAlerts(); draw(curK); renderCars(curOwner); renderDaily(); renderAvto(); renderExpenses(); }
 
 // tab keçidi — həm üst, həm alt nav sinxron
 function switchTab(v){
@@ -1615,7 +1846,8 @@ function parseMonthSheet(name, rows){
         const v = r[i+1];
         if(v === undefined || v === null || v === '') return '';
         const n = Number(v); return isNaN(n) ? String(v) : n;
-      })
+      }),
+      exp: parseNum(r[gi+1] || 0)
     }));
   // Cəmi sırası: plate pattern-ə uymayan, gəliri > 0 olan son sıra
   const sum = rows.slice(1).find(
