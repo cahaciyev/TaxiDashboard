@@ -950,6 +950,19 @@ function expTotalForPlateMonth(plate,mFull){
 function expForPlateDate(plate,dateStr){
   return expenseLog.filter(e=>e.plate===plate&&e.date===dateStr);
 }
+// Sheet-dəki xərc + əl ilə daxil edilmiş xərclər birlikdə
+function totalExpForPlateMonth(plate,mFull){
+  const ap=aliasPlate(plate);
+  const mData=daily.find(d=>d.full===mFull);
+  const row=mData?mData.rows.find(r=>aliasPlate(r.p)===ap):null;
+  const sheetExp=row?(row.exp||0):0;
+  return sheetExp+expTotalForPlateMonth(plate,mFull);
+}
+function sheetExpRow(plate,mFull){
+  const ap=aliasPlate(plate);
+  const mData=daily.find(d=>d.full===mFull);
+  return mData?mData.rows.find(r=>aliasPlate(r.p)===ap):null;
+}
 
 function renderCeDayExp(){
   const items=expForPlateDate(_ce.plate,_ceDate);
@@ -995,29 +1008,46 @@ function ceDelExp(id){
 
 function xrcClose(){document.getElementById('xrcOv').classList.remove('open');}
 function showExpDetail(plate,mFull){
-  const items=expForPlateMonth(plate,mFull).sort((a,b)=>a.date.localeCompare(b.date));
-  const total=items.reduce((s,e)=>s+e.amount,0);
+  const sRow=sheetExpRow(plate,mFull);
+  const sheetExp=sRow?(sRow.exp||0):0;
+  const sheetNote=sRow?(sRow.expNote||''):'';
+  const manualItems=expForPlateMonth(plate,mFull).sort((a,b)=>a.date.localeCompare(b.date));
+  const manualTotal=manualItems.reduce((s,e)=>s+e.amount,0);
+  const total=sheetExp+manualTotal;
   document.getElementById('xrcTitle').textContent=plate+' — Xərclər';
   document.getElementById('xrcSub').textContent=mFull+' · Cəmi: '+fmt(total)+' ₼';
-  if(!items.length){
-    document.getElementById('xrcBody').innerHTML='<div style="text-align:center;padding:20px 0;color:var(--mut)">Bu ay xərc yoxdur.</div>';
-  } else {
-    let h='';
-    items.forEach(e=>{
+  let h='';
+  // Sheet-dən gələn xərc
+  if(sheetExp>0){
+    h+=`<div style="font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--mut);margin-bottom:6px">Cədvəldən</div>`;
+    h+=`<div style="display:flex;align-items:center;gap:8px;padding:9px 12px;background:#fff8f0;border:1px solid #ffe0b2;border-radius:10px;margin-bottom:12px">
+      <span style="font-weight:800;font-size:15px;color:var(--red)">${fmt(sheetExp)} ₼</span>
+      ${sheetNote?`<span style="font-size:12px;color:var(--mut);flex:1">${sheetNote}</span>`:''}
+    </div>`;
+  }
+  // Əl ilə daxil edilmiş xərclər
+  if(manualItems.length){
+    h+=`<div style="font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--mut);margin-bottom:6px">Dashboarddan</div>`;
+    manualItems.forEach(e=>{
       const cc=EXP_CATS[e.cat]||EXP_CATS['Digər'];
       const d=e.date.split('-').reverse().join('.');
-      h+=`<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #f0f3f8">
+      h+=`<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #f0f3f8">
         <span style="color:var(--mut);font-size:12px;white-space:nowrap">${d}</span>
         <span class="exp-cat" style="background:${cc.bg};color:${cc.col}">${e.cat}</span>
         <span style="flex:1;font-size:12px;color:var(--mut)">${e.note||''}</span>
         <span style="font-weight:800;white-space:nowrap">${fmt(e.amount)} ₼</span>
       </div>`;
     });
-    h+=`<div style="display:flex;justify-content:space-between;font-weight:800;padding-top:10px;margin-top:4px">
+    h+='<div style="height:8px"></div>';
+  }
+  if(!sheetExp&&!manualItems.length){
+    h='<div style="text-align:center;padding:20px 0;color:var(--mut)">Bu ay xərc yoxdur.</div>';
+  } else {
+    h+=`<div style="display:flex;justify-content:space-between;font-weight:800;padding-top:8px;border-top:2px solid #eef1f6">
       <span>Cəmi</span><span style="color:var(--red)">${fmt(total)} ₼</span>
     </div>`;
-    document.getElementById('xrcBody').innerHTML=h;
   }
+  document.getElementById('xrcBody').innerHTML=h;
   document.getElementById('xrcOv').classList.add('open');
 }
 
@@ -1394,14 +1424,14 @@ function renderDaily(){
       const tip=isOv?`Dəyişdirilib: ${fmtTime(ts)}`:'Klik edib dəyər daxil edin';
       html+=`<td class="cell ${dayClass(v)}${isOv?' ov':''}${i===todayIdx?' dtoday':''}" onclick="ceOpen(this,'${m.full}','${row.p}',${i},'${orig}')" title="${tip}">${disp}</td>`;
     });
-    const rowExp=expTotalForPlateMonth(row.p,m.full);
+    const rowExp=totalExpForPlateMonth(row.p,m.full);
     const rowNet=rowTot-rowExp;
     html+=`<td class="tot num">${fmt(rowTot)}</td>`;
     html+=`<td class="tot xc num" onclick="showExpDetail('${row.p}','${m.full}')" title="Xərcləri gör / əlavə et">${rowExp>0?fmt(rowExp)+' ₼':'—'}</td>`;
     html+=`<td class="tot nc num" style="color:${rowNet>=0?'var(--teal)':'var(--red)'}">${fmt(rowNet)}</td></tr>`;
   });
   const grandInc=dayTot.reduce((s,x)=>s+x,0);
-  const grandExp=m.rows.reduce((s,row)=>s+expTotalForPlateMonth(row.p,m.full),0);
+  const grandExp=m.rows.reduce((s,row)=>s+totalExpForPlateMonth(row.p,m.full),0);
   html+='<tr class="dtot"><td class="plate">Günlük cəmi</td>';
   dayTot.forEach((t,i)=>html+=`<td class="num${i===todayIdx?' dtoday':''}">${t||''}</td>`);
   html+=`<td class="tot num">${fmt(grandInc)}</td>`;
@@ -1465,7 +1495,7 @@ function renderCars(f){
     const arInfo=arrestMap[arKey]||{};
     const isArrested=arInfo.arrested;
     const mInc=selMonth?plateDailySum(selMonth,c.p):c.inc;
-    const mExp=selMonth?expTotalForPlateMonth(c.p,selMonth.full):c.exp;
+    const mExp=selMonth?totalExpForPlateMonth(c.p,selMonth.full):c.exp;
     const mNet=mInc-mExp;
     const mLabel=selMonth?selMonth.full:'(ümumi)';
     return `<div class="vcard${isArrested?' arrested':''}" style="cursor:pointer" onclick="openFineModal('${c.p}')">
@@ -2025,7 +2055,8 @@ function parseMonthSheet(name, rows){
         if(v === undefined || v === null || v === '') return '';
         const n = Number(v); return isNaN(n) ? String(v) : n;
       }),
-      exp: parseNum(r[gi+1] || 0)
+      exp: parseNum(r[gi+1] || 0),
+      expNote: String(r[gi+2]||'')
     }));
   // Cəmi sırası: plate pattern-ə uymayan, gəliri > 0 olan son sıra
   const sum = rows.slice(1).find(
