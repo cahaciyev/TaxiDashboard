@@ -967,6 +967,7 @@ function hasOv(mFull,plate,di){ return ovKey(mFull,plate,di) in dailyOverrides; 
 // ── CELL EDITOR ──
 let _ce={mFull:'',plate:'',di:0,orig:''};
 let _ceDate='';
+let ceSessionExp={}; // plate|date → [{id,amount,cat,note}]
 const isMobile=()=>window.innerWidth<=640;
 
 function monthDayToDate(mFull,di){
@@ -1008,7 +1009,7 @@ function ceTab(t){
 }
 
 function renderCeDayExp(){
-  // Sheet-dən gələn aylıq xərc
+  // Sheet-dən gələn aylıq xərc (optimistik yenilənmiş)
   const sRow=sheetExpRow(_ce.plate,_ce.mFull);
   const sheetExp=sRow?(sRow.exp||0):0;
   const sheetNote=sRow?(sRow.expNote||''):'';
@@ -1020,28 +1021,27 @@ function renderCeDayExp(){
       ${sheetNote?`<div class="ce-sheet-note">${sheetNote}</div>`:''}
     </div>`;
   } else { sheetEl.innerHTML=''; }
-  // Bu gün üçün manual xərclər
-  const items=expForPlateDate(_ce.plate,_ceDate);
+  // Bu sessiyada əlavə edilən xərclər
+  const key=_ce.plate+'|'+_ceDate;
+  const items=ceSessionExp[key]||[];
   const dayTot=items.reduce((s,e)=>s+e.amount,0);
-  // Badge yenilə
-  const totalExp=sheetExp+expTotalForPlateMonth(_ce.plate,_ce.mFull);
+  // Badge
   const badge=document.getElementById('ceXrcBadge');
-  badge.textContent=totalExp>0?fmt(totalExp)+'₼':'';
-  badge.classList.toggle('show',totalExp>0);
+  badge.textContent=sheetExp>0?fmt(sheetExp)+'₼':'';
+  badge.classList.toggle('show',sheetExp>0);
   // Siyahı
   const listEl=document.getElementById('ceDayExpList');
   if(!items.length){
     listEl.innerHTML=`<div style="color:var(--mut);font-size:12px;padding:6px 0 2px;text-align:center">Bu gün üçün xərc yoxdur</div>`;
     return;
   }
-  listEl.innerHTML=`<div class="ce-day-lbl">Bu gün · ${fmt(dayTot)} ₼</div>`+
+  listEl.innerHTML=`<div class="ce-day-lbl">Bu sessiyada · ${fmt(dayTot)} ₼</div>`+
     items.map(e=>{
       const cc=EXP_CATS[e.cat]||EXP_CATS['Digər'];
       return `<div class="ce-exp-item">
         <span class="ci-amt">${fmt(e.amount)} ₼</span>
         <span class="exp-cat" style="background:${cc.bg};color:${cc.col};font-size:10px;padding:1px 7px">${e.cat}</span>
         <span class="ci-note">${e.note||''}</span>
-        <button class="ci-del" onclick="ceDelExp('${e.id}')" type="button">✕</button>
       </div>`;
     }).join('');
 }
@@ -1050,19 +1050,25 @@ function ceAddExp(){
   const cat=document.getElementById('ceExpCat').value;
   const note=document.getElementById('ceExpNote').value.trim();
   if(amt<=0){document.getElementById('ceExpAmt').focus();return;}
-  const entry={id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),plate:_ce.plate,date:_ceDate,cat,amount:amt,note};
-  expenseLog.push(entry);
-  gsWriteExpense(entry,false);
+  const noteStr=cat+(note?' - '+note:'');
+  // Aylıq cədvəlin AG/AH xanalarına yaz
+  gsWriteSheetExp(_ce.mFull,_ce.plate,amt,noteStr);
+  // Optimistik lokal yeniləmə
+  const ap=aliasPlate(_ce.plate);
+  const mData=daily.find(d=>d.full===_ce.mFull);
+  if(mData){
+    const row=mData.rows.find(r=>aliasPlate(r.p)===ap);
+    if(row){
+      row.exp=(row.exp||0)+amt;
+      row.expNote=(row.expNote?(row.expNote+'; '):'')+noteStr;
+    }
+  }
+  // Sessiya siyahısına əlavə et
+  const key=_ce.plate+'|'+_ceDate;
+  if(!ceSessionExp[key]) ceSessionExp[key]=[];
+  ceSessionExp[key].push({id:Date.now().toString(36),amount:amt,cat,note});
   document.getElementById('ceExpAmt').value='';
   document.getElementById('ceExpNote').value='';
-  renderCeDayExp();
-  renderDaily();
-  renderCars(curOwner);
-}
-function ceDelExp(id){
-  const entry=expenseLog.find(x=>x.id===id);
-  expenseLog=expenseLog.filter(x=>x.id!==id);
-  if(entry) gsWriteExpense(entry,true);
   renderCeDayExp();
   renderDaily();
   renderCars(curOwner);
@@ -1218,6 +1224,14 @@ function gsWriteExpense(entry, isDel){
     .then(r=>r.json())
     .then(j=>{ if(!j.ok) console.warn('Rasxod yazma xəta:', j.err); })
     .catch(e => console.warn('Rasxod şəbəkə xəta:', e.message));
+}
+function gsWriteSheetExp(mFull, plate, amount, noteStr){
+  if(!gsUrl) return;
+  const params={action:'sheetexp', sheet:mFull, plate, amount:String(amount), note:noteStr};
+  fetch(gsUrl, {method:'POST', body: new URLSearchParams(params)})
+    .then(r=>r.json())
+    .then(j=>{ if(!j.ok) console.warn('Cədvəl xərc xəta:', j.err); })
+    .catch(e => console.warn('Cədvəl xərc şəbəkə xəta:', e.message));
 }
 
 function gsSetup(){
