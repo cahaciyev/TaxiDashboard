@@ -674,15 +674,10 @@
       <div class="sec-h">
         <h2>Günlük ödənişlər</h2>
         <div class="ctrl"><label class="hint">Ay:</label><select id="monthSel"></select>
+          <button onclick="gsManualSync()" id="gsManualBtn" title="İndi sinxronla — yazılmış məlumatları Google Sheets-ə göndər" style="border:1px solid #bfe3dc;background:#eafaf7;border-radius:8px;padding:5px 11px;font:inherit;font-size:12px;font-weight:700;cursor:pointer;color:var(--teal)">↑ Sync</button>
           <button onclick="gsSetup()" id="gsSyncBtn" title="Google Sheets sinxronizasiya ayarları" style="border:1px solid #d0daea;background:#f5f8fd;border-radius:8px;padding:5px 11px;font:inherit;font-size:12px;font-weight:700;cursor:pointer;color:var(--mut)">⚙ Sheets</button>
           <span id="gsSyncStatus" style="font-size:12px;font-weight:600;display:none"></span>
         </div>
-      </div>
-      <div class="legend">
-        <span><i class="cP"></i> Ödəniş</span><span><i class="cI"></i> İşləmədi (i)</span>
-        <span><i class="cT"></i> Təmir (t)</span><span><i class="cZ"></i> 0 — ödəniş yox</span>
-        <span><i class="cE" style="border:1px solid #e2e7ef"></i> Boş</span>
-        <span><i style="background:transparent;border:2px solid var(--teal)"></i> Dəyişdirilib</span>
       </div>
       <div class="dscroll"><div id="dailyTbl"></div></div>
       <div class="owner-sums" id="ownerSums"></div>
@@ -1282,6 +1277,21 @@ function gsWriteSheetExp(mFull, plate, amount, noteStr){
   if(!gsUrl) return;
   const p={action:'sheetexp', sheet:mFull, plate, amount:String(amount), note:noteStr};
   gsSendOnce(p).then(()=>gsFlush()).catch(()=>{ gsEnqueue(p); console.warn('Cədvəl xərc növbəyə alındı'); });
+}
+
+// Əl ilə sinx — düyməyə basıldıqda gözləyən (yazılmış, lakin göndərilməmiş) yazıları Sheets-ə göndər
+async function gsManualSync(){
+  if(!gsUrl){ alert('Əvvəlcə ⚙ Sheets düyməsi ilə Web App URL təyin edin.'); return; }
+  const st=document.getElementById('gsSyncStatus');
+  const show=(col,txt,ms)=>{ st.style.display='inline'; st.style.color=col; st.textContent=txt; setTimeout(()=>st.style.display='none', ms); };
+  const n0=gsPendingCount();
+  if(n0===0){ show('var(--teal)','✓ Hər şey sinxrondur', 2500); return; }
+  if(!navigator.onLine){ show('var(--red)','✗ İnternet yoxdur — sonra cəhd edin', 3000); return; }
+  show('var(--mut)','↑ '+n0+' yazı göndərilir…', 60000);
+  await gsFlush();
+  const left=gsPendingCount();
+  if(left===0) show('var(--teal)','✓ '+n0+' yazı göndərildi', 3000);
+  else         show('var(--amber)','⏳ '+(n0-left)+' göndərildi, '+left+' qaldı', 3500);
 }
 
 // Avtomatik sinx tetikleyiciləri: internet qayıdanda, periodik, səhifə görünəndə
