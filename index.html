@@ -586,6 +586,17 @@
   </div>
 </div>
 
+<!-- AY SONU HESABAT MODAL -->
+<div class="exp-ov" id="rptOv" onclick="if(event.target===this)rptClose()">
+  <div class="exp-sheet" style="max-width:480px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+      <h3 style="font-size:16px;font-weight:800">📊 Ay sonu hesabat</h3>
+      <button onclick="rptClose()" style="border:none;background:none;font-size:20px;cursor:pointer;color:var(--mut);line-height:1">✕</button>
+    </div>
+    <div id="rptBody"></div>
+  </div>
+</div>
+
 <!-- CƏRIMƏ MODAL -->
 <div class="fine-ov" id="fineOv" onclick="if(event.target===this)closeFineModal()">
   <div class="fine-sheet">
@@ -674,6 +685,7 @@
       <div class="sec-h">
         <h2>Günlük ödənişlər</h2>
         <div class="ctrl"><label class="hint">Ay:</label><select id="monthSel"></select>
+          <button onclick="monthEndReport()" id="rptBtn" title="Ay sonu hesabat — sahibkarlar arasında bölgü" style="border:1px solid #e6c9f0;background:#faf0fd;border-radius:8px;padding:5px 11px;font:inherit;font-size:12px;font-weight:700;cursor:pointer;color:#8E24AA">📊 Ay sonu hesabat</button>
           <button onclick="gsManualSync()" id="gsManualBtn" title="İndi sinxronla — yazılmış məlumatları Google Sheets-ə göndər" style="border:1px solid #bfe3dc;background:#eafaf7;border-radius:8px;padding:5px 11px;font:inherit;font-size:12px;font-weight:700;cursor:pointer;color:var(--teal)">↑ Sync</button>
           <button onclick="gsSetup()" id="gsSyncBtn" title="Google Sheets sinxronizasiya ayarları" style="border:1px solid #d0daea;background:#f5f8fd;border-radius:8px;padding:5px 11px;font:inherit;font-size:12px;font-weight:700;cursor:pointer;color:var(--mut)">⚙ Sheets</button>
           <span id="gsSyncStatus" style="font-size:12px;font-weight:600;display:none"></span>
@@ -1339,7 +1351,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   gsUpdateSyncBadge();
   gsFlush(); // proqram açılan kimi gözləyən yazıları sinxronla
 });
-document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ceClose();xrcClose();} if(e.key==='Enter'&&document.getElementById('cellEditor').style.display!=='none') ceSave(); });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ceClose();xrcClose();rptClose();} if(e.key==='Enter'&&document.getElementById('cellEditor').style.display!=='none') ceSave(); });
 document.addEventListener('mousedown',e=>{ const ed=document.getElementById('cellEditor'); if(ed.style.display!=='none'&&!ed.contains(e.target)&&!e.target.classList.contains('cell')) ceClose(); });
 
 let cars = [
@@ -1567,6 +1579,79 @@ function ownerDailySums(m){
   const sums={};
   m.rows.forEach(row=>{ const o=ownerOf(row.p); sums[o]=(sums[o]||0)+plateDailySum(m,row.p); });
   return sums;
+}
+
+// ============ AY SONU HESABAT (sahibkarlar arası bölgü) ============
+function rptClose(){ document.getElementById('rptOv').classList.remove('open'); }
+function monthEndReport(){
+  const m=daily[+document.getElementById('monthSel').value];
+  const body=document.getElementById('rptBody');
+  const ov=document.getElementById('rptOv');
+  if(!m){ body.innerHTML='<div class="hint" style="padding:14px">Bu ay üçün data yoxdur.</div>'; ov.classList.add('open'); return; }
+  const order=['Mama','Fuad','Cavid'];
+  // Sahibkar üzrə xalis = gəlir − xərc
+  const net={}, inc={}, exp={};
+  m.rows.forEach(row=>{
+    const o=ownerOf(row.p);
+    const i=plateDailySum(m,row.p);
+    const x=totalExpForPlateMonth(row.p,m.full);
+    inc[o]=(inc[o]||0)+i; exp[o]=(exp[o]||0)+x; net[o]=(net[o]||0)+(i-x);
+  });
+  let owners=order.filter(o=>o in net);
+  Object.keys(net).forEach(o=>{ if(!owners.includes(o)) owners.push(o); });
+  if(!owners.length){ body.innerHTML='<div class="hint" style="padding:14px">Sahibkar tapılmadı.</div>'; ov.classList.add('open'); return; }
+  const totalNet=owners.reduce((s,o)=>s+net[o],0);
+  const share=totalNet/owners.length;
+  const bal=owners.map(o=>({o, net:net[o], inc:inc[o]||0, exp:exp[o]||0, diff:net[o]-share}));
+  // Minimal köçürmələr: artığı olan azı olana versin
+  const payers=bal.filter(b=>b.diff>0.5).map(b=>({o:b.o, amt:b.diff})).sort((a,b)=>b.amt-a.amt);
+  const recvs =bal.filter(b=>b.diff<-0.5).map(b=>({o:b.o, amt:-b.diff})).sort((a,b)=>b.amt-a.amt);
+  const transfers=[];
+  let pi=0, ri=0;
+  while(pi<payers.length && ri<recvs.length){
+    const amt=Math.min(payers[pi].amt, recvs[ri].amt);
+    if(amt>0.5) transfers.push({from:payers[pi].o, to:recvs[ri].o, amt});
+    payers[pi].amt-=amt; recvs[ri].amt-=amt;
+    if(payers[pi].amt<=0.5) pi++;
+    if(recvs[ri].amt<=0.5) ri++;
+  }
+  // Render
+  let h=`<div style="background:#faf0fd;border:1px solid #e6c9f0;border-radius:10px;padding:12px 14px;margin:8px 0 14px">
+    <div style="font-size:11px;font-weight:700;color:#8E24AA;letter-spacing:.04em;text-transform:uppercase">${m.full} · hər sahibkara düşən pay</div>
+    <div style="font-size:26px;font-weight:800;color:#8E24AA;line-height:1.1;margin-top:2px">${fmt(Math.round(share))} ₼</div>
+    <div style="font-size:12px;color:var(--mut);margin-top:2px">Ümumi xalis ${fmt(Math.round(totalNet))} ₼ · ${owners.length} sahibkar · bərabər bölünür</div>
+  </div>`;
+  h+='<div style="display:flex;flex-direction:column;gap:7px;margin-bottom:16px">';
+  bal.forEach(b=>{
+    const col=ownerColor[b.o]||'#6B7C93';
+    const d=Math.round(b.diff);
+    const dtxt = d>0 ? `+${fmt(d)} ₼ · verməli` : d<0 ? `${fmt(d)} ₼ · almalı` : 'bərabər';
+    const dcol = d>0 ? 'var(--red)' : d<0 ? 'var(--teal)' : 'var(--mut)';
+    h+=`<div style="display:flex;align-items:center;gap:10px;padding:9px 12px;border:1px solid #eef1f6;border-left:3px solid ${col};border-radius:9px">
+       <span style="font-weight:800;color:${col};min-width:50px">${b.o}</span>
+       <span style="font-size:12px;color:var(--mut)">Xalis</span>
+       <span style="font-size:14px;font-weight:700">${fmt(Math.round(b.net))} ₼</span>
+       <span style="margin-left:auto;font-size:12px;font-weight:800;color:${dcol}">${dtxt}</span>
+     </div>`;
+  });
+  h+='</div>';
+  if(!transfers.length){
+    h+='<div style="text-align:center;color:var(--teal);font-weight:700;padding:10px;background:#eafaf7;border-radius:10px">✓ Hesablar bərabərdir — köçürmə lazım deyil</div>';
+  } else {
+    h+='<div style="font-size:11px;font-weight:700;color:var(--mut);letter-spacing:.04em;text-transform:uppercase;margin-bottom:8px">Kim kimə nə qədər göndərməlidir</div>';
+    transfers.forEach(t=>{
+      const fc=ownerColor[t.from]||'#6B7C93', tc=ownerColor[t.to]||'#6B7C93';
+      h+=`<div style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:#f7faff;border:1px solid #dceafc;border-radius:10px;margin-bottom:8px">
+        <span style="font-weight:800;color:${fc};font-size:15px">${t.from}</span>
+        <span style="color:var(--mut);font-size:18px">→</span>
+        <span style="font-weight:800;color:${tc};font-size:15px">${t.to}</span>
+        <span style="margin-left:auto;font-weight:800;font-size:18px">${fmt(Math.round(t.amt))} ₼</span>
+      </div>`;
+    });
+  }
+  h+=`<div style="font-size:11px;color:var(--mut);margin-top:10px;line-height:1.5">Xalis = gəlir − xərc. Məbləğlər ən yaxın manata yuvarlaqlaşdırılıb. Köçürmələrdən sonra hər sahibkarda ${fmt(Math.round(share))} ₼ qalır.</div>`;
+  body.innerHTML=h;
+  ov.classList.add('open');
 }
 function renderDaily(){
   const sel=document.getElementById('monthSel');
