@@ -1287,8 +1287,7 @@ function gsWriteSheetExp(mFull, plate, amount, noteStr){
   gsSendOnce(p).then(()=>gsFlush()).catch(()=>{ gsEnqueue(p); console.warn('Cədvəl xərc növbəyə alındı'); });
 }
 
-// Əl ilə sinx — sadə məntiq: hazırda seçilmiş ayın cədvəlinə bax,
-// bütün dolu xanaların dəyərini olduğu kimi Sheets-ə yaz (SET — təkrar təhlükəsiz).
+// Əl ilə sinx — seçilmiş ayın cədvəlindəki bütün dolu xanaları TƏK sorğuda (batch) Sheets-ə yazır.
 async function gsManualSync(){
   if(!gsUrl){ alert('Əvvəlcə ⚙ Sheets düyməsi ilə Web App URL təyin edin.'); return; }
   const st=document.getElementById('gsSyncStatus');
@@ -1296,21 +1295,31 @@ async function gsManualSync(){
   if(!navigator.onLine){ show('var(--red)','✗ İnternet yoxdur — sonra cəhd edin', 3000); return; }
   const m=daily[+document.getElementById('monthSel').value];
   if(!m){ show('var(--red)','✗ Cədvəl yoxdur', 2500); return; }
-  // Cədvəlin bütün xanalarını gəz, dolu olanları növbəyə yığ
+  // Cədvəlin bütün dolu xanalarını topla
+  const cells=[];
   m.rows.forEach(row=>{
     row.vals.forEach((orig,i)=>{
       const v=getEffVal(m.full,row.p,i,orig);
       if(v===''||v===null||v===undefined) return; // boş xananı keç
-      gsEnqueue({sheet:m.full, plate:row.p, di:String(i), val:String(v)});
+      cells.push({sheet:m.full, plate:row.p, di:i, val:String(v)});
     });
   });
-  const n0=gsPendingCount();
-  if(n0===0){ show('var(--teal)','✓ Göndəriləcək məlumat yoxdur', 2500); return; }
-  show('var(--mut)','↑ '+n0+' xana göndərilir…', 180000);
-  await gsFlush();
-  const left=gsPendingCount();
-  if(left===0) show('var(--teal)','✓ '+m.full+' — '+n0+' xana yükləndi', 3500);
-  else         show('var(--amber)','⏳ '+(n0-left)+' yükləndi, '+left+' qaldı', 3500);
+  if(!cells.length){ show('var(--teal)','✓ Göndəriləcək məlumat yoxdur', 2500); return; }
+  show('var(--mut)','↑ '+cells.length+' xana göndərilir…', 120000);
+  try{
+    const r=await fetch(gsUrl,{method:'POST',body:new URLSearchParams({action:'batch', cells:JSON.stringify(cells)})});
+    const j=await r.json();
+    if(!j||!j.ok) throw new Error((j&&j.err)||'server xətası');
+    const errN=(j.errors&&j.errors.length)||0;
+    if(errN) show('var(--amber)','✓ '+j.written+' yazıldı · '+errN+' xana tapılmadı', 4500);
+    else     show('var(--teal)','✓ '+m.full+' — '+j.written+' xana Sheets-ə yazıldı', 3500);
+  }catch(err){
+    // batch alınmadı — fərdi növbəyə al ki, avtomatik retry göndərsin
+    cells.forEach(c=>gsEnqueue({sheet:c.sheet, plate:c.plate, di:String(c.di), val:c.val}));
+    console.warn('Batch sync xətası:', err.message);
+    show('var(--amber)','⏳ '+cells.length+' xana növbəyə alındı (avtomatik sinx)', 4000);
+    gsFlush();
+  }
 }
 
 // Avtomatik sinx tetikleyiciləri: internet qayıdanda, periodik, səhifə görünəndə
