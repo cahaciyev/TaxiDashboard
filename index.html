@@ -1195,57 +1195,111 @@ function ceReset(){
   ceClose(); renderDaily(); renderAll();
 }
 
-// ── GOOGLE SHEETS WRITE ──
+// ── GOOGLE SHEETS WRITE (+ offline növbə / avtomatik təkrar sinx) ──
 const GS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw2IwyqkAZTmXf4eoheTAW9XT1nab5BRJMy5cHMiNGSXnsUQVno1FPw9uQ_woouts4/exec';
 let gsUrl = localStorage.getItem('gsUrl') || GS_SCRIPT_URL;
+
+// ── Sinx növbəsi: şəbəkə xətası olduqda yazılar burada saxlanılır,
+//    proqram açılanda / internet qayıdanda / periodik olaraq təkrar göndərilir ──
+const GS_QUEUE_KEY = 'gsQueue';
+let gsFlushing = false;
+
+function gsQLoad(){ try{ return JSON.parse(localStorage.getItem(GS_QUEUE_KEY)) || []; }catch{ return []; } }
+function gsQSave(q){ localStorage.setItem(GS_QUEUE_KEY, JSON.stringify(q)); gsUpdateSyncBadge(); }
+function gsPendingCount(){ return gsQLoad().length; }
+
+// Eyni hədəfə təkrar yazıları birləşdir (son dəyər qalsın) — növbə şişməsin
+function gsDedupKey(p){
+  if(p.action==='expense')  return 'expense:'+p.id;
+  if(p.action==='sheetexp') return 'sheetexp:'+p.sheet+':'+p.plate;
+  return 'cell:'+p.sheet+':'+p.plate+':'+p.di;
+}
+
+function gsEnqueue(p){
+  const k=gsDedupKey(p);
+  const q=gsQLoad().filter(it=>gsDedupKey(it.params)!==k);
+  q.push({params:p, ts:Date.now()});
+  gsQSave(q);
+}
+
+// Tək göndəriş — uğursuz olsa (şəbəkə və ya server xətası) throw edir
+function gsSendOnce(p){
+  return fetch(gsUrl, {method:'POST', body:new URLSearchParams(p)})
+    .then(r=>r.json())
+    .then(j=>{ if(!j || !j.ok) throw new Error((j&&j.err)||'server xətası'); return true; });
+}
+
+// Növbəni sıra ilə boşalt — ilk uğursuzluqda dayan, sonra yenidən cəhd olunacaq
+async function gsFlush(){
+  if(gsFlushing || !gsUrl) return;
+  if(!navigator.onLine) return;
+  if(!gsQLoad().length) return;
+  gsFlushing=true;
+  try{
+    while(true){
+      const cur=gsQLoad();
+      if(!cur.length) break;
+      try{ await gsSendOnce(cur[0].params); }
+      catch(e){ break; }              // hələ də xəta var — sonra təkrar cəhd
+      const after=gsQLoad(); after.shift(); gsQSave(after);
+    }
+  } finally { gsFlushing=false; gsUpdateSyncBadge(); }
+}
+
+// ⚙ Sheets düyməsində gözləyən yazı sayını göstər
+function gsUpdateSyncBadge(){
+  const b=document.getElementById('gsSyncBtn'); if(!b) return;
+  const n=gsPendingCount();
+  if(!gsUrl){ b.style.color='var(--mut)'; b.textContent='⚙ Sheets'; return; }
+  if(n>0){ b.style.color='var(--red)'; b.textContent='⚙ Sheets ⏳'+n; b.title='Sinx gözləyən '+n+' yazı — internet qayıdanda göndəriləcək'; }
+  else   { b.style.color='var(--teal)'; b.textContent='⚙ Sheets ✓'; b.title='Google Sheets sinxronizasiya ayarları'; }
+}
+
 function gsWrite(mFull, plate, di, val){
   if(!gsUrl) return;
+  const p={sheet:mFull, plate, di:String(di), val:String(val)};
   const st=document.getElementById('gsSyncStatus');
   st.style.display='inline'; st.style.color='var(--mut)'; st.textContent='↑ yazılır…';
-  fetch(gsUrl,{
-    method:'POST',
-    body: new URLSearchParams({sheet:mFull, plate, di:String(di), val:String(val)})
-  }).then(r=>r.json()).then(j=>{
-    if(j.ok){ st.style.color='var(--teal)'; st.textContent='✓ Sheets-ə yazıldı'; }
-    else { st.style.color='var(--red)'; st.textContent='✗ '+( j.err||'xəta'); }
+  gsSendOnce(p).then(()=>{
+    st.style.color='var(--teal)'; st.textContent='✓ Sheets-ə yazıldı';
     setTimeout(()=>st.style.display='none', 2500);
-  }).catch(err=>{
-    st.style.color='var(--red)'; st.textContent='✗ şəbəkə xətası';
+    gsFlush(); // varsa, köhnə növbəni də boşalt
+  }).catch(()=>{
+    gsEnqueue(p); // itməsin — növbəyə al, sonra avtomatik sinx olacaq
+    st.style.color='var(--amber)'; st.textContent='⏳ növbəyə alındı (sonra sinx)';
     setTimeout(()=>st.style.display='none', 3000);
   });
 }
 function gsWriteExpense(entry, isDel){
   if(!gsUrl) return;
-  const params = isDel
+  const p = isDel
     ? {action:'expense', id:entry.id, del:'true'}
     : {action:'expense', id:entry.id, plate:entry.plate, date:entry.date,
        amount:String(entry.amount), cat:entry.cat, note:entry.note||''};
-  fetch(gsUrl, {method:'POST', body: new URLSearchParams(params)})
-    .then(r=>r.json())
-    .then(j=>{ if(!j.ok) console.warn('Rasxod yazma xəta:', j.err); })
-    .catch(e => console.warn('Rasxod şəbəkə xəta:', e.message));
+  gsSendOnce(p).then(()=>gsFlush()).catch(()=>{ gsEnqueue(p); console.warn('Rasxod növbəyə alındı'); });
 }
 function gsWriteSheetExp(mFull, plate, amount, noteStr){
   if(!gsUrl) return;
-  const params={action:'sheetexp', sheet:mFull, plate, amount:String(amount), note:noteStr};
-  fetch(gsUrl, {method:'POST', body: new URLSearchParams(params)})
-    .then(r=>r.json())
-    .then(j=>{ if(!j.ok) console.warn('Cədvəl xərc xəta:', j.err); })
-    .catch(e => console.warn('Cədvəl xərc şəbəkə xəta:', e.message));
+  const p={action:'sheetexp', sheet:mFull, plate, amount:String(amount), note:noteStr};
+  gsSendOnce(p).then(()=>gsFlush()).catch(()=>{ gsEnqueue(p); console.warn('Cədvəl xərc növbəyə alındı'); });
 }
+
+// Avtomatik sinx tetikleyiciləri: internet qayıdanda, periodik, səhifə görünəndə
+window.addEventListener('online', gsFlush);
+setInterval(gsFlush, 25000);
+document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='visible') gsFlush(); });
 
 function gsSetup(){
   const u=prompt('Google Apps Script Web App URL-ni yapışdırın\n(boş buraxsanız sinxronizasiya söndürülür):', gsUrl);
   if(u===null) return;
   gsUrl=u.trim();
   localStorage.setItem('gsUrl', gsUrl);
-  const btn=document.getElementById('gsSyncBtn');
-  btn.style.color = gsUrl ? 'var(--teal)' : 'var(--mut)';
-  btn.textContent = gsUrl ? '⚙ Sheets ✓' : '⚙ Sheets';
-  if(gsUrl) alert('Qeydə alındı! İndi dəyişikliklər Google Sheets-ə yazılacaq.');
+  gsUpdateSyncBadge();
+  if(gsUrl){ alert('Qeydə alındı! İndi dəyişikliklər Google Sheets-ə yazılacaq.'); gsFlush(); }
 }
 document.addEventListener('DOMContentLoaded',()=>{
-  if(gsUrl){ const b=document.getElementById('gsSyncBtn'); if(b){b.style.color='var(--teal)';b.textContent='⚙ Sheets ✓';} }
+  gsUpdateSyncBadge();
+  gsFlush(); // proqram açılan kimi gözləyən yazıları sinxronla
 });
 document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ceClose();xrcClose();} if(e.key==='Enter'&&document.getElementById('cellEditor').style.display!=='none') ceSave(); });
 document.addEventListener('mousedown',e=>{ const ed=document.getElementById('cellEditor'); if(ed.style.display!=='none'&&!ed.contains(e.target)&&!e.target.classList.contains('cell')) ceClose(); });
