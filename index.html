@@ -15,6 +15,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
   :root{
     --deck:#0F1C30;--deck2:#162A45;--line:#27406A;
@@ -832,6 +834,18 @@
         <input type="date" id="gpsTo" style="font:inherit;font-size:12px;font-weight:600;padding:6px 10px;border:1px solid #d6deea;border-radius:8px;background:#fff;color:var(--ink);cursor:pointer">
         <button onclick="fetchGpsRange()" style="font:inherit;font-size:12px;font-weight:700;background:var(--teal);color:#fff;border:0;border-radius:8px;padding:6px 16px;cursor:pointer">Axtar</button>
         <span id="gpsRangeLabel" style="font-size:11px;color:var(--mut)"></span>
+      </div>
+
+      <!-- CANLI XƏRİTƏ -->
+      <div class="panel" style="padding:0;margin-bottom:18px;overflow:hidden">
+        <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--line);flex-wrap:wrap">
+          <span style="font-size:14px;font-weight:800">🗺 Canlı yer</span>
+          <span id="mapStatus" style="font-size:12px;color:var(--mut)">—</span>
+          <span id="mapAutoLbl" style="font-size:11px;color:var(--teal);font-weight:700"></span>
+          <button id="mapRefreshBtn" onclick="fetchGpsMap()" style="margin-left:auto;font:inherit;font-size:12px;font-weight:700;background:var(--teal);color:#fff;border:0;border-radius:8px;padding:6px 14px;cursor:pointer">↻ Yenilə</button>
+          <button id="mapToggleBtn" onclick="toggleGpsMap()" style="font:inherit;font-size:12px;font-weight:700;background:transparent;border:1px solid #d6deea;border-radius:8px;padding:6px 12px;cursor:pointer;color:var(--mut)">Gizlət</button>
+        </div>
+        <div id="gpsMap" style="height:460px;width:100%;background:#eef1f6"></div>
       </div>
 
       <!-- KPI: Active / Top / Bottom -->
@@ -2025,6 +2039,91 @@ function renderGpsStatic(){
   document.getElementById('gpsNote').textContent='Demo məlumat · Canlı data üçün Geekbro-ya daxil olun';
 }
 
+// ============ CANLI XƏRİTƏ (Geekbro map/company/vehicles) ============
+let gpsMapObj=null, gpsMarkers={}, gpsMapVisible=true, gpsMapFitted=false, gpsMapFetching=false;
+const BAKU=[40.3953,49.8822];
+
+function initGpsMap(){
+  if(gpsMapObj){ setTimeout(()=>{try{gpsMapObj.invalidateSize();}catch(e){}},60); return true; }
+  if(!window.L){ return false; }
+  gpsMapObj=L.map('gpsMap',{zoomControl:true}).setView(BAKU,11);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(gpsMapObj);
+  setTimeout(()=>{try{gpsMapObj.invalidateSize();}catch(e){}},120);
+  return true;
+}
+
+function carIcon(v){
+  const st=v.status;
+  const col=st==='ACTIVE'?'#1E9E8F':st==='IDLING'?'#E29A2E':'#7D90A8';
+  const ang=(v.angle||0);
+  const html=`<div style="display:flex;flex-direction:column;align-items:center;line-height:1">
+    <div style="background:${col};color:#fff;font:800 10px/1 Inter,sans-serif;padding:2px 5px;border-radius:5px;white-space:nowrap;box-shadow:0 1px 3px rgba(0,0,0,.35);margin-bottom:1px">${v.plateNumber||''}</div>
+    <div style="width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:13px solid ${col};transform:rotate(${ang}deg);filter:drop-shadow(0 1px 1px rgba(0,0,0,.4))"></div>
+  </div>`;
+  return L.divIcon({html, className:'car-div-icon', iconSize:[64,32], iconAnchor:[32,28]});
+}
+
+function updateGpsMarkers(vehicles){
+  if(!gpsMapObj) return;
+  const pad=n=>String(n).padStart(2,'0');
+  const seen={}; const bounds=[];
+  vehicles.forEach(v=>{
+    const gp=v.gpsPoint; if(!gp||gp.latitude==null||gp.longitude==null) return;
+    const ll=[gp.latitude, gp.longitude]; bounds.push(ll);
+    const key=v.plateNumber||v.vehicleId||v.imei; seen[key]=1;
+    const t=gp.timestamp?new Date(gp.timestamp):null;
+    const tt=t?pad(t.getDate())+'.'+pad(t.getMonth()+1)+' '+pad(t.getHours())+':'+pad(t.getMinutes()):'—';
+    const stTxt=v.status==='ACTIVE'?'Hərəkətdə':v.status==='IDLING'?'Boş dayanma (mühərrik işləyir)':'Dayanıb / söndürülüb';
+    const pop=`<div style="font:600 13px Inter,sans-serif;min-width:150px">
+      <b style="font-size:14px">${v.plateNumber||''}</b><br>
+      <span style="color:#666">Status:</span> ${stTxt}<br>
+      <span style="color:#666">Sürət:</span> <b>${v.speed||0} km/s</b><br>
+      <span style="color:#666">Son siqnal:</span> ${tt}${v.address?'<br><span style="color:#666">Ünvan:</span> '+v.address:''}</div>`;
+    if(gpsMarkers[key]){
+      gpsMarkers[key].setLatLng(ll).setIcon(carIcon(v)).setPopupContent(pop);
+    } else {
+      gpsMarkers[key]=L.marker(ll,{icon:carIcon(v)}).addTo(gpsMapObj).bindPopup(pop);
+    }
+  });
+  // Köhnə (siyahıda olmayan) markerləri sil
+  Object.keys(gpsMarkers).forEach(k=>{ if(!seen[k]){ gpsMapObj.removeLayer(gpsMarkers[k]); delete gpsMarkers[k]; } });
+  if(bounds.length && !gpsMapFitted){ try{gpsMapObj.fitBounds(bounds,{padding:[45,45],maxZoom:14});}catch(e){} gpsMapFitted=true; }
+}
+
+async function fetchGpsMap(){
+  if(!gpsMapVisible) return;
+  const stEl=document.getElementById('mapStatus');
+  if(!initGpsMap()){ if(stEl)stEl.textContent='Xəritə kitabxanası yüklənmədi'; return; }
+  if(gpsMapFetching) return;
+  gpsMapFetching=true;
+  const btn=document.getElementById('mapRefreshBtn'); if(btn)btn.textContent='↻ …';
+  try{
+    const r=await fetch(`${GB_PROXY}/mapvehicles`,{cache:'no-store'});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const arr=await r.json();
+    const list=Array.isArray(arr)?arr:[];
+    updateGpsMarkers(list);
+    const withPos=list.filter(v=>v.gpsPoint&&v.gpsPoint.latitude!=null).length;
+    const moving=list.filter(v=>v.status==='ACTIVE').length;
+    const t=new Date(),pad=n=>String(n).padStart(2,'0');
+    if(stEl) stEl.textContent=`${withPos} avtomobil · ${moving} hərəkətdə · ${pad(t.getHours())}:${pad(t.getMinutes())}:${pad(t.getSeconds())}`;
+  }catch(e){
+    if(stEl) stEl.textContent='Xəta: '+e.message+(/40[0-9]|50[0-9]/.test(e.message)?' (worker yenilənməlidir)':'');
+  }finally{
+    gpsMapFetching=false;
+    if(btn)btn.textContent='↻ Yenilə';
+  }
+}
+
+function toggleGpsMap(){
+  gpsMapVisible=!gpsMapVisible;
+  const c=document.getElementById('gpsMap');
+  const b=document.getElementById('mapToggleBtn');
+  if(c) c.style.display=gpsMapVisible?'':'none';
+  if(b) b.textContent=gpsMapVisible?'Gizlət':'Göstər';
+  if(gpsMapVisible) fetchGpsMap();
+}
+
 // Interval segment click — presets clear the custom range label
 document.getElementById('gpsSeg').addEventListener('click',e=>{
   const b=e.target.closest('button'); if(!b) return;
@@ -2214,7 +2313,9 @@ function switchTab(v){
   if(window.gpsAutoTimer){clearInterval(window.gpsAutoTimer);window.gpsAutoTimer=null;}
   if(v==='gps'){
     fetchGpsData();
-    window.gpsAutoTimer=setInterval(()=>{if(!document.hidden) fetchGpsData();},30000);
+    fetchGpsMap();
+    const al=document.getElementById('mapAutoLbl'); if(al) al.textContent='● 30 san-da avtomatik yenilənir';
+    window.gpsAutoTimer=setInterval(()=>{if(!document.hidden){ fetchGpsData(); fetchGpsMap(); }},30000);
   }
   if(v==='avto'){
     alertsLastSeenCount=buildAlerts().filter(a=>a.sev==='crit').length;

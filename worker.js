@@ -3,6 +3,8 @@ const GB_USER     = 'cavidhaciyevE';
 const GB_PASS     = 'cavid!E24';
 const GB_LOGIN    = 'https://app.geekbro.ai/be-service/api/auth/login';
 const GB_UPSTREAM = 'https://app.geekbro.ai/be-service/drivers';
+const GB_MAP      = 'https://app.geekbro.ai/be-service/map/company/vehicles';
+const GB_COMPANY  = 'f5004d86-5e84-4800-aef1-be710480576a';
 const SMSRADAR_BASE   = 'https://smsradar.az/apixxx';
 const SMSRADAR_COOKIE = 'lang=az; ut=f7qava2163vfO1fehasecdD9Y3Gap290O2pd08DdBd1729n8t9_76a3d52ae6d6f37a00022c779f79e83ace8d7f12; st=Y0j3264f0dp2Ha6aSdw7EandecxaWa_6E9o6x8bfj74Za3I1_76a3d52ae6d6f37a00022c779f79e83ace8d7f12; token_user=5f82f93ec913e79e7c126d32';
 const ORIGIN = 'https://cahaciyev.github.io';
@@ -83,6 +85,27 @@ export default {
       });
       try { return await handleFines(car); }
       catch (e) {
+        return new Response(JSON.stringify({ error: e.message }), {
+          status: 502, headers: { 'Content-Type': 'application/json', ...cors() },
+        });
+      }
+    }
+
+    // ── Canlı yer proxy: GET /mapvehicles ──
+    if (request.method === 'GET' && url.pathname === '/mapvehicles') {
+      try {
+        const company = url.searchParams.get('companyId') || GB_COMPANY;
+        const mapUrl = `${GB_MAP}?companyId=${company}`;
+        let token = await getToken();
+        let r = await fetch(mapUrl, { headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' } });
+        if (r.status === 401 || r.status === 403) {
+          cachedToken = null; tokenExpiry = 0;
+          token = await getToken();
+          r = await fetch(mapUrl, { headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' } });
+        }
+        const text = await r.text();
+        return new Response(text, { status: r.status, headers: { 'Content-Type': 'application/json', ...cors() } });
+      } catch (e) {
         return new Response(JSON.stringify({ error: e.message }), {
           status: 502, headers: { 'Content-Type': 'application/json', ...cors() },
         });
