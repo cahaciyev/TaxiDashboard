@@ -1224,21 +1224,29 @@ function gsSendOnce(p){
     .then(j=>{ if(!j || !j.ok) throw new Error((j&&j.err)||'server xətası'); return true; });
 }
 
-// Növbəni sıra ilə boşalt — ilk uğursuzluqda dayan, sonra yenidən cəhd olunacaq
+// Növbəni boşalt — hər xananı müstəqil göndər. Uğursuz xana QALANLARI bloklamasın:
+// keçib davam et, uğurlu olanı növbədən sil, qalanlar sonra yenidən cəhd olunur.
 async function gsFlush(){
   if(gsFlushing || !gsUrl) return;
   if(!navigator.onLine) return;
   if(!gsQLoad().length) return;
   gsFlushing=true;
+  let failed=0;
   try{
-    while(true){
-      const cur=gsQLoad();
-      if(!cur.length) break;
-      try{ await gsSendOnce(cur[0].params); }
-      catch(e){ break; }              // hələ də xəta var — sonra təkrar cəhd
-      const after=gsQLoad(); after.shift(); gsQSave(after);
+    const snapshot=gsQLoad();
+    for(const item of snapshot){
+      try{
+        await gsSendOnce(item.params);
+        const k=gsDedupKey(item.params);
+        gsQSave(gsQLoad().filter(it=>gsDedupKey(it.params)!==k)); // uğurlu — sil
+      }catch(e){
+        failed++;
+        console.warn('Sinx alınmadı:', JSON.stringify(item.params), '·', e.message);
+      }
+      await new Promise(r=>setTimeout(r, 250)); // Apps Script limitlərinə qarşı yüngül gecikmə
     }
   } finally { gsFlushing=false; gsUpdateSyncBadge(); }
+  return failed;
 }
 
 // ⚙ Sheets düyməsində gözləyən yazı sayını göstər
