@@ -1279,19 +1279,30 @@ function gsWriteSheetExp(mFull, plate, amount, noteStr){
   gsSendOnce(p).then(()=>gsFlush()).catch(()=>{ gsEnqueue(p); console.warn('Cədvəl xərc növbəyə alındı'); });
 }
 
-// Əl ilə sinx — düyməyə basıldıqda gözləyən (yazılmış, lakin göndərilməmiş) yazıları Sheets-ə göndər
+// Əl ilə sinx — düyməyə basıldıqda cədvəldəki BÜTÜN dəyişdirilmiş xanaları (və növbəni)
+// yenidən Sheets-ə göndərir. Xana yazısı SET semantikasıdır — təkrar göndəriş təhlükəsizdir.
 async function gsManualSync(){
   if(!gsUrl){ alert('Əvvəlcə ⚙ Sheets düyməsi ilə Web App URL təyin edin.'); return; }
   const st=document.getElementById('gsSyncStatus');
   const show=(col,txt,ms)=>{ st.style.display='inline'; st.style.color=col; st.textContent=txt; setTimeout(()=>st.style.display='none', ms); };
-  const n0=gsPendingCount();
-  if(n0===0){ show('var(--teal)','✓ Hər şey sinxrondur', 2500); return; }
   if(!navigator.onLine){ show('var(--red)','✗ İnternet yoxdur — sonra cəhd edin', 3000); return; }
-  show('var(--mut)','↑ '+n0+' yazı göndərilir…', 60000);
+  // Dəyişdirilmiş xanalar → növbəyə yığ
+  Object.keys(dailyOverrides).forEach(k=>{
+    const parts=k.split('|'); if(parts.length<3) return;
+    gsEnqueue({sheet:parts[0], plate:parts[1], di:String(parts.slice(2).join('|')), val:String(dailyOverrides[k])});
+  });
+  // Sıfırlanmış xanalar → boş dəyər kimi göndər
+  Object.keys(dailyResets).forEach(k=>{
+    const parts=k.split('|'); if(parts.length<3) return;
+    gsEnqueue({sheet:parts[0], plate:parts[1], di:String(parts.slice(2).join('|')), val:''});
+  });
+  const n0=gsPendingCount();
+  if(n0===0){ show('var(--teal)','✓ Göndəriləcək dəyişiklik yoxdur', 2500); return; }
+  show('var(--mut)','↑ '+n0+' xana göndərilir…', 120000);
   await gsFlush();
   const left=gsPendingCount();
-  if(left===0) show('var(--teal)','✓ '+n0+' yazı göndərildi', 3000);
-  else         show('var(--amber)','⏳ '+(n0-left)+' göndərildi, '+left+' qaldı', 3500);
+  if(left===0) show('var(--teal)','✓ '+n0+' xana Sheets-ə yükləndi', 3000);
+  else         show('var(--amber)','⏳ '+(n0-left)+' yükləndi, '+left+' qaldı', 3500);
 }
 
 // Avtomatik sinx tetikleyiciləri: internet qayıdanda, periodik, səhifə görünəndə
