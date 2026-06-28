@@ -520,6 +520,7 @@
           <span id="fleetSub">9 maşın · 3 sahib</span> · son yenilənmə <span id="today"></span>
           <span id="status"></span>
           <button id="refresh">↻ Yenilə</button>
+          <button id="rasxodBtn" onclick="rasxodOpen()" style="font:inherit;font-size:12px;font-weight:700;background:#fff;border:1px solid #d6deea;border-radius:9px;padding:5px 13px;cursor:pointer;color:var(--ink);margin-left:4px">💰 Rasxodlar</button>
         </div>
       </div>
       <div class="deck-stats">
@@ -533,7 +534,6 @@
       <button data-v="daily">Günlük ödənişlər</button>
       <button data-v="cars">Maşınlar</button>
       <button data-v="avto">Avtomobil & Bildirişlər</button>
-      <button data-v="exp">Rasxodlar</button>
       <button data-v="gps">GPS &middot; Günlük</button>
     </div>
   </div>
@@ -554,7 +554,7 @@
 </div>
 
 <!-- RASXOD MODAL -->
-<div class="exp-ov" id="expOv" onclick="if(event.target===this)expClose()">
+<div class="exp-ov" id="expOv" style="z-index:950" onclick="if(event.target===this)expClose()">
   <div class="exp-sheet">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
       <h3 style="font-size:16px;font-weight:800" id="expModalTitle">Rasxod əlavə et</h3>
@@ -593,6 +593,30 @@
     <div class="exp-modal-actions">
       <button class="exp-btn-cancel" onclick="expClose()">Ləğv et</button>
       <button class="exp-btn-save" onclick="expSave()">Yadda saxla</button>
+    </div>
+  </div>
+</div>
+
+<!-- RASXODLAR POPUP MODAL -->
+<div class="exp-ov" id="rasxodOv" onclick="if(event.target===this)rasxodClose()">
+  <div class="exp-sheet" style="max-width:780px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <h3 style="font-size:17px;font-weight:800">💰 Rasxodlar</h3>
+      <button onclick="rasxodClose()" style="border:none;background:none;font-size:20px;cursor:pointer;color:var(--mut);line-height:1">✕</button>
+    </div>
+    <div class="sec-h" style="margin-top:0">
+      <h2 style="font-size:15px">Aylıq xərclər (Sheets)</h2>
+      <span class="hint">Aylıq vərəqlərdəki gəlir / xərc / xalis</span>
+    </div>
+    <div class="panel" style="margin-bottom:18px;overflow-x:auto">
+      <table class="exp-tbl" id="expSheetTbl"></table>
+    </div>
+    <div class="sec-h" style="margin-top:4px">
+      <h2 style="font-size:15px">Əlavə rasxodlar</h2>
+      <button class="exp-add-btn" onclick="expOpen()">+ Əlavə et</button>
+    </div>
+    <div class="panel" style="margin-top:0">
+      <div id="expList"></div>
     </div>
   </div>
 </div>
@@ -648,10 +672,6 @@
     <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
     <span class="lbl">Bildirişlər</span>
     <span class="mbadge" id="mobBadge"></span>
-  </button>
-  <button class="mnb" data-v="exp">
-    <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>
-    <span class="lbl">Rasxod</span>
   </button>
   <button class="mnb" data-v="gps">
     <svg viewBox="0 0 24 24"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
@@ -780,23 +800,6 @@
   </section>
 
   <!-- RASXODLAR -->
-  <section class="view" id="v-exp">
-    <div class="sec-h">
-      <h2>Aylıq xərclər (Sheets)</h2>
-      <span class="hint">Aylıq vərəqlərdəki gəlir / xərc / xalis</span>
-    </div>
-    <div class="panel" style="margin-bottom:18px;overflow-x:auto">
-      <table class="exp-tbl" id="expSheetTbl"></table>
-    </div>
-    <div class="sec-h" style="margin-top:4px">
-      <h2>Əlavə rasxodlar</h2>
-      <button class="exp-add-btn" onclick="expOpen()">+ Əlavə et</button>
-    </div>
-    <div class="panel" style="margin-top:0">
-      <div id="expList"></div>
-    </div>
-  </section>
-
   <!-- GPS -->
   <section class="view" id="v-gps">
     <div class="sec-h">
@@ -1376,7 +1379,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   gsUpdateSyncBadge();
   gsFlush(); // proqram açılan kimi gözləyən yazıları sinxronla
 });
-document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ceClose();xrcClose();rptClose();} if(e.key==='Enter'&&document.getElementById('cellEditor').style.display!=='none') ceSave(); });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ceClose();xrcClose();rptClose();rasxodClose();} if(e.key==='Enter'&&document.getElementById('cellEditor').style.display!=='none') ceSave(); });
 document.addEventListener('mousedown',e=>{ const ed=document.getElementById('cellEditor'); if(ed.style.display!=='none'&&!ed.contains(e.target)&&!e.target.classList.contains('cell')) ceClose(); });
 
 let cars = [
@@ -1608,6 +1611,8 @@ function ownerDailySums(m){
 
 // ============ AY SONU HESABAT (sahibkarlar arası bölgü) ============
 function rptClose(){ document.getElementById('rptOv').classList.remove('open'); }
+function rasxodOpen(){ renderExpenses(); document.getElementById('rasxodOv').classList.add('open'); }
+function rasxodClose(){ document.getElementById('rasxodOv').classList.remove('open'); }
 function monthEndReport(){
   const m=daily[+document.getElementById('monthSel').value];
   const body=document.getElementById('rptBody');
