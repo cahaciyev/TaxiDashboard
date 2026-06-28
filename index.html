@@ -2144,28 +2144,30 @@ function updateGpsMarkers(vehicles){
   if(bounds.length && !gpsMapFitted){ try{gpsMapObj.fitBounds(bounds,{padding:[45,45],maxZoom:14});}catch(e){} gpsMapFitted=true; }
 }
 
-async function fetchGpsMap(){
+async function fetchGpsMap(silent){
   if(!gpsMapVisible) return;
   const stEl=document.getElementById('mapStatus');
   if(!initGpsMap()){ if(stEl)stEl.textContent='Xəritə kitabxanası yüklənmədi'; return; }
-  if(gpsMapFetching) return;
+  if(gpsMapFetching) return;   // əvvəlki sorğu bitməyibsə, bu tıqqıltını ötür (özünü tarazlayır)
   gpsMapFetching=true;
-  const btn=document.getElementById('mapRefreshBtn'); if(btn)btn.textContent='↻ …';
+  const btn=document.getElementById('mapRefreshBtn');
+  if(!silent && btn) btn.textContent='↻ …';
   try{
     const r=await fetch(`${GB_PROXY}/mapvehicles`,{cache:'no-store'});
     if(!r.ok) throw new Error('HTTP '+r.status);
     const arr=await r.json();
     const list=Array.isArray(arr)?arr:[];
-    updateGpsMarkers(list);
+    updateGpsMarkers(list);   // markerlər yerində yenilənir — yenidən qurulmur, ona görə hiss olunmur
     const withPos=list.filter(v=>v.gpsPoint&&v.gpsPoint.latitude!=null).length;
     const moving=list.filter(v=>v.status==='ACTIVE').length;
     const t=new Date(),pad=n=>String(n).padStart(2,'0');
     if(stEl) stEl.textContent=`${withPos} avtomobil · ${moving} hərəkətdə · ${pad(t.getHours())}:${pad(t.getMinutes())}:${pad(t.getSeconds())}`;
   }catch(e){
-    if(stEl) stEl.textContent='Xəta: '+e.message+(/40[0-9]|50[0-9]/.test(e.message)?' (worker yenilənməlidir)':'');
+    // Səssiz avtomatik yeniləmədə keçici xətanı göstərmə (titrəmə olmasın)
+    if(!silent && stEl) stEl.textContent='Xəta: '+e.message+(/40[0-9]|50[0-9]/.test(e.message)?' (worker yenilənməlidir)':'');
   }finally{
     gpsMapFetching=false;
-    if(btn)btn.textContent='↻ Yenilə';
+    if(!silent && btn) btn.textContent='↻ Yenilə';
   }
 }
 
@@ -2176,7 +2178,7 @@ function toggleGpsMap(){
   const al=document.getElementById('mapAutoLbl');
   if(c) c.style.display=gpsMapVisible?'':'none';
   if(b) b.textContent=gpsMapVisible?'Gizlət':'Göstər';
-  if(al) al.textContent=gpsMapVisible?'● canlı — 4 san-da yenilənir':'';
+  if(al) al.textContent=gpsMapVisible?'● canlı — saniyədə yenilənir':'';
   if(gpsMapVisible) fetchGpsMap();
 }
 
@@ -2372,7 +2374,7 @@ function switchTab(v){
     fetchGpsData();
     fetchGpsMap();
     window.gpsAutoTimer=setInterval(()=>{if(!document.hidden) fetchGpsData();},30000);
-    window.gpsMapTimer=setInterval(()=>{if(!document.hidden) fetchGpsMap();},4000);
+    window.gpsMapTimer=setInterval(()=>{if(!document.hidden) fetchGpsMap(true);},1000);
   }
   if(v==='avto'){
     alertsLastSeenCount=buildAlerts().filter(a=>a.sev==='crit').length;
