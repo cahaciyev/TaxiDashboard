@@ -1085,8 +1085,9 @@ function ceAddExp(){
   const cat=document.getElementById('ceExpCat').value;
   const note=document.getElementById('ceExpNote').value.trim();
   if(amt<=0){document.getElementById('ceExpAmt').focus();return;}
-  const noteStr=cat+(note?' - '+note:'');
-  // Aylıq cədvəlin AG/AH xanalarına yaz
+  // Qeyd mətni: "52 Yağ" (məbləğ + kateqoriya + istəyə bağlı qeyd)
+  const noteStr=amt+' '+cat+(note?' '+note:'');
+  // Aylıq vərəqin Xərclər sütununa məbləğ, Qeyd sütununa mətn yaz
   gsWriteSheetExp(_ce.mFull,_ce.plate,amt,noteStr);
   // Optimistik lokal yeniləmə
   const ap=aliasPlate(_ce.plate);
@@ -1095,7 +1096,7 @@ function ceAddExp(){
     const row=mData.rows.find(r=>aliasPlate(r.p)===ap);
     if(row){
       row.exp=(row.exp||0)+amt;
-      row.expNote=(row.expNote?(row.expNote+'; '):'')+noteStr;
+      row.expNote=(row.expNote?(row.expNote+', '):'')+noteStr;
     }
   }
   // Sessiya siyahısına əlavə et
@@ -1246,7 +1247,7 @@ function gsPendingCount(){ return gsQLoad().length; }
 // Eyni hədəfə təkrar yazıları birləşdir (son dəyər qalsın) — növbə şişməsin
 function gsDedupKey(p){
   if(p.action==='expense')  return 'expense:'+p.id;
-  if(p.action==='sheetexp') return 'sheetexp:'+p.sheet+':'+p.plate;
+  if(p.action==='sheetexp') return 'sheetexp:'+(p.uid||(p.sheet+':'+p.plate+':'+p.note)); // additiv — birləşməsin
   return 'cell:'+p.sheet+':'+p.plate+':'+p.di;
 }
 
@@ -1323,7 +1324,8 @@ function gsWriteExpense(entry, isDel){
 }
 function gsWriteSheetExp(mFull, plate, amount, noteStr){
   if(!gsUrl) return;
-  const p={action:'sheetexp', sheet:mFull, plate, amount:String(amount), note:noteStr};
+  // uid — additiv əməliyyat olduğu üçün növbədə birləşməsin (hər xərc ayrıca qalsın)
+  const p={action:'sheetexp', sheet:mFull, plate, amount:String(amount), note:noteStr, uid:Date.now().toString(36)+Math.random().toString(36).slice(2,6)};
   gsSendOnce(p).then(()=>gsFlush()).catch(()=>{ gsEnqueue(p); console.warn('Cədvəl xərc növbəyə alındı'); });
 }
 

@@ -112,6 +112,48 @@ function doPost(e) {
     catch (err) { return _json({ok:false, err:String(err)}); }
   }
 
+  // ── SHEETEXP: xərci aylıq vərəqin Xərclər sütununa + Qeyd sütununa yaz ──
+  if (action === 'sheetexp') {
+    const seName = e.parameter.sheet;
+    const sePlate = e.parameter.plate;
+    const seAmount = parseFloat(e.parameter.amount) || 0;
+    const seQeyd = e.parameter.note || e.parameter.qeyd || '';
+    const seTg = ss.getSheetByName(seName);
+    if (!seTg) return _json({ok:false, err:'vərəq tapılmadı'});
+    const seData = seTg.getDataRange().getValues();
+    const seHeader = seData[0] || [];
+    let xcol = -1, qcol = -1;
+    for (let c = 0; c < seHeader.length; c++) {
+      const h = String(seHeader[c]).trim();
+      if (h === 'Xərclər') xcol = c;
+      if (h === 'Qeyd') qcol = c;
+    }
+    if (xcol < 0) return _json({ok:false, err:'Xərclər sütunu tapılmadı'});
+    for (let i = 1; i < seData.length; i++) {
+      if (String(seData[i][0]).trim() === String(sePlate).trim()) {
+        const rn = i + 1;
+        if (seAmount) {
+          const xCell = seTg.getRange(rn, xcol + 1);
+          const f = xCell.getFormula();           // düstursa "=62+110", yoxsa ''
+          const v = xCell.getValue();
+          let nf;
+          if (f) nf = f + '+' + seAmount;                          // "=62+110" -> "=62+110+52"
+          else if (v === '' || v === null) nf = '=' + seAmount;     // boş -> "=52"
+          else nf = '=' + v + '+' + seAmount;                      // "62" -> "=62+52"
+          xCell.setFormula(nf);
+        }
+        if (qcol >= 0 && seQeyd) {
+          const qCell = seTg.getRange(rn, qcol + 1);
+          const cq = String(qCell.getValue() || '').trim();
+          qCell.setValue(cq ? (cq + ', ' + seQeyd) : seQeyd);      // varsa ", " ilə əlavə et
+        }
+        SpreadsheetApp.flush();
+        return _json({ok:true});
+      }
+    }
+    return _json({ok:false, err:'plaka tapılmadı'});
+  }
+
   // ── BATCH: bütün günlük xanaları tək sorğuda yaz ──
   if (action === 'batch') {
     let cells;
