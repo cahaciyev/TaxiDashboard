@@ -23,6 +23,7 @@
   .leaflet-zoom-anim .car-div-icon{transition:none}
   .car-svg{transition:transform 1.2s ease}
   .car-plate{transition:background-color .3s}
+  .car-wrap{transition:transform .15s ease}
 </style>
 <style>
   :root{
@@ -2055,6 +2056,7 @@ function initGpsMap(){
   if(!window.L){ return false; }
   gpsMapObj=L.map('gpsMap',{zoomControl:true}).setView(BAKU,11);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(gpsMapObj);
+  gpsMapObj.on('zoomend', applyCarScale);
   setTimeout(()=>{try{gpsMapObj.invalidateSize();}catch(e){}},120);
   return true;
 }
@@ -2063,8 +2065,8 @@ function carColor(st){ return st==='ACTIVE'?'#1E9E8F':st==='IDLING'?'#E29A2E':'#
 
 // Yuxarıdan görünüşlü maşın forması (şimala — yuxarı baxır; angle ilə fırlanır)
 function carSvg(col,ang){
-  return `<svg class="car-svg" viewBox="0 0 40 64" width="30" height="48" style="transform:rotate(${ang}deg);display:block;filter:drop-shadow(0 2px 3px rgba(0,0,0,.5))">
-    <rect class="car-body" x="6" y="3" width="28" height="58" rx="12" fill="${col}" stroke="#fff" stroke-width="2.5"/>
+  return `<svg class="car-svg" viewBox="0 0 40 64" width="19" height="30" style="transform:rotate(${ang}deg);display:block;filter:drop-shadow(0 1px 2px rgba(0,0,0,.5))">
+    <rect class="car-body" x="6" y="3" width="28" height="58" rx="12" fill="${col}" stroke="#fff" stroke-width="3"/>
     <path d="M11 17 Q20 11 29 17 L29 24 Q20 20 11 24 Z" fill="#eaf6ff" opacity=".95"/>
     <rect x="11.5" y="41" width="17" height="11" rx="4" fill="#dceefc" opacity=".85"/>
     <rect x="2" y="15" width="5" height="12" rx="2.5" fill="#15171a"/>
@@ -2075,11 +2077,20 @@ function carSvg(col,ang){
 }
 function carIcon(v){
   const col=carColor(v.status), ang=(v.angle||0);
-  const html=`<div class="car-wrap" style="display:flex;flex-direction:column;align-items:center;line-height:1">
-    <div class="car-plate" style="background:${col};color:#fff;font:800 11px/1 Inter,sans-serif;padding:3px 7px;border-radius:7px;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.45);margin-bottom:2px;border:1.5px solid rgba(255,255,255,.7)">${v.plateNumber||''}</div>
+  const html=`<div class="car-wrap" style="display:flex;flex-direction:column;align-items:center;line-height:1;transform-origin:28px 32px">
+    <div class="car-plate" style="background:${col};color:#fff;font:700 9px/1 Inter,sans-serif;padding:1px 4px;border-radius:5px;white-space:nowrap;box-shadow:0 1px 2px rgba(0,0,0,.4);margin-bottom:1px;border:1px solid rgba(255,255,255,.65)">${v.plateNumber||''}</div>
     ${carSvg(col,ang)}
   </div>`;
-  return L.divIcon({html, className:'car-div-icon', iconSize:[40,70], iconAnchor:[20,44]});
+  return L.divIcon({html, className:'car-div-icon', iconSize:[56,52], iconAnchor:[28,32]});
+}
+function carScale(z){ return Math.max(0.5, Math.min(1.25, 0.5+(z-10)*0.14)); }
+function applyCarScale(){
+  if(!gpsMapObj) return;
+  const s=carScale(gpsMapObj.getZoom());
+  Object.keys(gpsMarkers).forEach(k=>{
+    const el=gpsMarkers[k]._icon && gpsMarkers[k]._icon.querySelector('.car-wrap');
+    if(el) el.style.transform='scale('+s+')';
+  });
 }
 function popHtml(v){
   const pad=n=>String(n).padStart(2,'0');
@@ -2115,13 +2126,18 @@ function updateGpsMarkers(vehicles){
       mk.setPopupContent(popHtml(v));
     } else {
       const nm=L.marker(ll,{icon:carIcon(v)}).addTo(gpsMapObj).bindPopup(popHtml(v));
-      // İlk əlavədə sürüşmə animasiyası olmasın
-      if(nm._icon){ nm._icon.style.transition='none'; requestAnimationFrame(()=>{ if(nm._icon) nm._icon.style.transition=''; }); }
+      // İlk əlavədə sürüşmə animasiyası olmasın + dərhal cari zoom miqyası
+      if(nm._icon){
+        nm._icon.style.transition='none';
+        const w=nm._icon.querySelector('.car-wrap'); if(w) w.style.transform='scale('+carScale(gpsMapObj.getZoom())+')';
+        requestAnimationFrame(()=>{ if(nm._icon) nm._icon.style.transition=''; });
+      }
       gpsMarkers[key]=nm;
     }
   });
   // Köhnə (siyahıda olmayan) markerləri sil
   Object.keys(gpsMarkers).forEach(k=>{ if(!seen[k]){ gpsMapObj.removeLayer(gpsMarkers[k]); delete gpsMarkers[k]; } });
+  applyCarScale();
   if(bounds.length && !gpsMapFitted){ try{gpsMapObj.fitBounds(bounds,{padding:[45,45],maxZoom:14});}catch(e){} gpsMapFitted=true; }
 }
 
