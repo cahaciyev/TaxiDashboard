@@ -1416,6 +1416,8 @@ const AZ_MON = {
   'İyun':6,'Iyun':6,'İyul':7,'Iyul':7,'Avqust':8,
   'Sentyabr':9,'Oktyabr':10,'Noyabr':11,'Dekabr':12
 };
+// Sheet adlandırması üçün ay adları (index→ad) — Google Sheets-dəki ASCII formatla eyni
+const AZ_SHEET_MONTHS = ['Yanvar','Fevral','Mart','Aprel','May','Iyun','Iyul','Avqust','Sentyabr','Oktyabr','Noyabr','Dekabr'];
 const pbColor=v=>v>=0.5?'#1E9E8F':v>=0.45?'#E29A2E':'#DD5247';
 (()=>{const d=TODAY,p=n=>n.toString().padStart(2,'0');document.getElementById('today').textContent=p(d.getDate())+'.'+p(d.getMonth()+1)+'.'+d.getFullYear();})();
 
@@ -2503,6 +2505,19 @@ async function loadLive(){
     if(mj.error) throw new Error(mj.error.message);
 
     const allSheetTitles = mj.sheets.map(s => s.properties.title);
+
+    // ── Ay bitibsə: cari ayın vərəqi yoxdursa avtomatik yarat, sonra yenidən yüklə ──
+    const curMonthName = AZ_SHEET_MONTHS[TODAY.getMonth()] + ' ' + TODAY.getFullYear();
+    if(!allSheetTitles.includes(curMonthName) && gsUrl && !window._newMonthTried){
+      window._newMonthTried = true;
+      setStatus('● Yeni ay cədvəli yaradılır…','#A9BCD8');
+      try{
+        await fetch(gsUrl,{method:'POST',body:new URLSearchParams({action:'newmonth'})});
+        await new Promise(r=>setTimeout(r,900));   // Sheets-ə yazılması üçün qısa gözləmə
+      }catch(e){ console.warn('Yeni ay yaratma:',e.message); }
+      return loadLive();   // siyahını təzələ — yeni ay artıq görünməlidir
+    }
+
     const monthNames = allSheetTitles
       .filter(n => { const p=n.split(' '); return p.length===2 && AZ_MON[p[0]] && /^\d{4}$/.test(p[1]); })
       .sort((a,b) => {
