@@ -18,12 +18,13 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
-  /* Canlı xəritə maşın ikonu — hamar yerdəyişmə */
-  .car-div-icon{transition:transform 1.4s linear}
-  .leaflet-zoom-anim .car-div-icon{transition:none}
-  .car-svg{transition:transform 1.2s ease}
-  .car-plate{transition:background-color .3s}
-  .car-wrap{transition:transform .15s ease}
+  /* Canlı xəritə maşın pini — təmiz görünüş, hamar yerdəyişmə */
+  .car-pin{transition:transform 1.4s linear}
+  .leaflet-zoom-anim .car-pin{transition:none}
+  .pin-glyph{transition:transform .8s ease;transform-box:fill-box;transform-origin:center}
+  .car-tip{background:rgba(20,28,40,.82)!important;color:#fff!important;border:none!important;box-shadow:none!important;font:600 10px/1 Inter,sans-serif!important;padding:2px 6px!important;border-radius:5px!important;white-space:nowrap}
+  .car-tip:before{display:none!important}
+  .map-lowzoom .car-tip{display:none}
 </style>
 <style>
   :root{
@@ -2056,41 +2057,29 @@ function initGpsMap(){
   if(!window.L){ return false; }
   gpsMapObj=L.map('gpsMap',{zoomControl:true}).setView(BAKU,11);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(gpsMapObj);
-  gpsMapObj.on('zoomend', applyCarScale);
+  gpsMapObj.on('zoomend', applyMapZoom);
   setTimeout(()=>{try{gpsMapObj.invalidateSize();}catch(e){}},120);
   return true;
 }
 
 function carColor(st){ return st==='ACTIVE'?'#1E9E8F':st==='IDLING'?'#E29A2E':'#7D90A8'; }
 
-// Yuxarıdan görünüşlü maşın forması (şimala — yuxarı baxır; angle ilə fırlanır)
-function carSvg(col,ang){
-  return `<svg class="car-svg" viewBox="0 0 40 64" width="19" height="30" style="transform:rotate(${ang}deg);display:block;filter:drop-shadow(0 1px 2px rgba(0,0,0,.5))">
-    <rect class="car-body" x="6" y="3" width="28" height="58" rx="12" fill="${col}" stroke="#fff" stroke-width="3"/>
-    <path d="M11 17 Q20 11 29 17 L29 24 Q20 20 11 24 Z" fill="#eaf6ff" opacity=".95"/>
-    <rect x="11.5" y="41" width="17" height="11" rx="4" fill="#dceefc" opacity=".85"/>
-    <rect x="2" y="15" width="5" height="12" rx="2.5" fill="#15171a"/>
-    <rect x="33" y="15" width="5" height="12" rx="2.5" fill="#15171a"/>
-    <rect x="2" y="40" width="5" height="12" rx="2.5" fill="#15171a"/>
-    <rect x="33" y="40" width="5" height="12" rx="2.5" fill="#15171a"/>
-  </svg>`;
+// Təmiz damcı-pin: içində kiçik maşın forması (angle ilə fırlanır), pin ucu dəqiq yeri göstərir
+function pinSvg(col,ang){
+  return `<svg width="30" height="38" viewBox="0 0 28 36" style="display:block;filter:drop-shadow(0 2px 2px rgba(0,0,0,.35))">
+    <path class="pin-body" d="M14 1 C6.8 1 1 6.6 1 13.5 C1 22 14 35 14 35 C14 35 27 22 27 13.5 C27 6.6 21.2 1 14 1 Z" fill="${col}" stroke="#fff" stroke-width="2"/>
+    <g class="pin-glyph" style="transform:rotate(${ang}deg)">
+      <rect x="9.5" y="6.5" width="9" height="13" rx="3.5" fill="#fff"/>
+      <path class="pin-win" d="M11 9.5 Q14 8 17 9.5 L17 12 Q14 11 11 12 Z" fill="${col}"/>
+      <rect class="pin-win" x="11" y="15" width="6" height="3" rx="1.2" fill="${col}" opacity=".55"/>
+    </g></svg>`;
 }
 function carIcon(v){
-  const col=carColor(v.status), ang=(v.angle||0);
-  const html=`<div class="car-wrap" style="display:flex;flex-direction:column;align-items:center;line-height:1;transform-origin:28px 32px">
-    <div class="car-plate" style="background:${col};color:#fff;font:700 9px/1 Inter,sans-serif;padding:1px 4px;border-radius:5px;white-space:nowrap;box-shadow:0 1px 2px rgba(0,0,0,.4);margin-bottom:1px;border:1px solid rgba(255,255,255,.65)">${v.plateNumber||''}</div>
-    ${carSvg(col,ang)}
-  </div>`;
-  return L.divIcon({html, className:'car-div-icon', iconSize:[56,52], iconAnchor:[28,32]});
+  return L.divIcon({html:pinSvg(carColor(v.status),(v.angle||0)), className:'car-pin', iconSize:[30,38], iconAnchor:[15,36]});
 }
-function carScale(z){ return Math.max(0.5, Math.min(1.25, 0.5+(z-10)*0.14)); }
-function applyCarScale(){
+function applyMapZoom(){
   if(!gpsMapObj) return;
-  const s=carScale(gpsMapObj.getZoom());
-  Object.keys(gpsMarkers).forEach(k=>{
-    const el=gpsMarkers[k]._icon && gpsMarkers[k]._icon.querySelector('.car-wrap');
-    if(el) el.style.transform='scale('+s+')';
-  });
+  try{ gpsMapObj.getContainer().classList.toggle('map-lowzoom', gpsMapObj.getZoom()<13); }catch(e){}
 }
 function popHtml(v){
   const pad=n=>String(n).padStart(2,'0');
@@ -2119,25 +2108,23 @@ function updateGpsMarkers(vehicles){
       mk.setLatLng(ll);
       const el=mk._icon;
       if(el){
-        const svg=el.querySelector('.car-svg'); if(svg) svg.style.transform='rotate('+ang+'deg)';
-        el.querySelectorAll('.car-body').forEach(b=>b.setAttribute('fill',col));
-        const pl=el.querySelector('.car-plate'); if(pl) pl.style.background=col;
+        const g=el.querySelector('.pin-glyph'); if(g) g.style.transform='rotate('+ang+'deg)';
+        const b=el.querySelector('.pin-body'); if(b) b.setAttribute('fill',col);
+        el.querySelectorAll('.pin-win').forEach(w=>w.setAttribute('fill',col));
       }
       mk.setPopupContent(popHtml(v));
     } else {
-      const nm=L.marker(ll,{icon:carIcon(v)}).addTo(gpsMapObj).bindPopup(popHtml(v));
-      // İlk əlavədə sürüşmə animasiyası olmasın + dərhal cari zoom miqyası
-      if(nm._icon){
-        nm._icon.style.transition='none';
-        const w=nm._icon.querySelector('.car-wrap'); if(w) w.style.transform='scale('+carScale(gpsMapObj.getZoom())+')';
-        requestAnimationFrame(()=>{ if(nm._icon) nm._icon.style.transition=''; });
-      }
+      const nm=L.marker(ll,{icon:carIcon(v)}).addTo(gpsMapObj)
+        .bindTooltip(v.plateNumber||key,{permanent:true,direction:'top',offset:[0,-34],className:'car-tip'})
+        .bindPopup(popHtml(v));
+      // İlk əlavədə sürüşmə animasiyası olmasın
+      if(nm._icon){ nm._icon.style.transition='none'; requestAnimationFrame(()=>{ if(nm._icon) nm._icon.style.transition=''; }); }
       gpsMarkers[key]=nm;
     }
   });
   // Köhnə (siyahıda olmayan) markerləri sil
   Object.keys(gpsMarkers).forEach(k=>{ if(!seen[k]){ gpsMapObj.removeLayer(gpsMarkers[k]); delete gpsMarkers[k]; } });
-  applyCarScale();
+  applyMapZoom();
   if(bounds.length && !gpsMapFitted){ try{gpsMapObj.fitBounds(bounds,{padding:[45,45],maxZoom:14});}catch(e){} gpsMapFitted=true; }
 }
 
