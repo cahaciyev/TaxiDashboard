@@ -852,9 +852,9 @@
           <span id="mapStatus" style="font-size:12px;color:var(--mut)">—</span>
           <span id="mapAutoLbl" style="font-size:11px;color:var(--teal);font-weight:700"></span>
           <button id="mapRefreshBtn" onclick="fetchGpsMap()" style="margin-left:auto;font:inherit;font-size:12px;font-weight:700;background:var(--teal);color:#fff;border:0;border-radius:8px;padding:6px 14px;cursor:pointer">↻ Yenilə</button>
-          <button id="mapToggleBtn" onclick="toggleGpsMap()" style="font:inherit;font-size:12px;font-weight:700;background:transparent;border:1px solid #d6deea;border-radius:8px;padding:6px 12px;cursor:pointer;color:var(--mut)">Gizlət</button>
+          <button id="mapToggleBtn" onclick="toggleGpsMap()" style="font:inherit;font-size:12px;font-weight:700;background:transparent;border:1px solid #d6deea;border-radius:8px;padding:6px 12px;cursor:pointer;color:var(--mut)">Göstər</button>
         </div>
-        <div id="gpsMap" style="height:460px;width:100%;background:#eef1f6"></div>
+        <div id="gpsMap" style="height:460px;width:100%;background:#eef1f6;display:none"></div>
       </div>
 
       <!-- KPI: Active / Top / Bottom -->
@@ -2049,7 +2049,7 @@ function renderGpsStatic(){
 }
 
 // ============ CANLI XƏRİTƏ (Geekbro map/company/vehicles) ============
-let gpsMapObj=null, gpsMarkers={}, gpsMapVisible=true, gpsMapFitted=false, gpsMapFetching=false;
+let gpsMapObj=null, gpsMarkers={}, gpsMapVisible=false, gpsMapFitted=false, gpsMapFetching=false;
 const BAKU=[40.3953,49.8822];
 
 function initGpsMap(){
@@ -2157,8 +2157,10 @@ function toggleGpsMap(){
   gpsMapVisible=!gpsMapVisible;
   const c=document.getElementById('gpsMap');
   const b=document.getElementById('mapToggleBtn');
+  const al=document.getElementById('mapAutoLbl');
   if(c) c.style.display=gpsMapVisible?'':'none';
   if(b) b.textContent=gpsMapVisible?'Gizlət':'Göstər';
+  if(al) al.textContent=gpsMapVisible?'● canlı — 8 san-da yenilənir':'';
   if(gpsMapVisible) fetchGpsMap();
 }
 
@@ -2353,7 +2355,6 @@ function switchTab(v){
   if(v==='gps'){
     fetchGpsData();
     fetchGpsMap();
-    const al=document.getElementById('mapAutoLbl'); if(al) al.textContent='● canlı — 8 san-da yenilənir';
     window.gpsAutoTimer=setInterval(()=>{if(!document.hidden) fetchGpsData();},30000);
     window.gpsMapTimer=setInterval(()=>{if(!document.hidden) fetchGpsMap();},8000);
   }
