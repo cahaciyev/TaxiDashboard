@@ -828,9 +828,11 @@
       <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px">
         <div class="seg" id="gpsSeg">
           <button class="on" data-p="today">Bu gün</button>
+          <button data-p="yesterday">Dünən</button>
           <button data-p="week">Bu həftə</button>
           <button data-p="lastweek">Ötən həftə</button>
           <button data-p="month">Bu ay</button>
+          <button data-p="lastmonth">Ötən ay</button>
         </div>
         <button id="gpsRefreshBtn" onclick="fetchGpsData()" style="font:inherit;font-size:12px;font-weight:700;background:transparent;border:1px solid #d6deea;border-radius:9px;padding:6px 14px;cursor:pointer;color:var(--mut)">↻ Yenilə</button>
         <span id="gpsConnectInfo" style="font-size:12px;color:var(--mut)"></span>
@@ -1856,6 +1858,10 @@ function gpsDateRange(p){
   if(p==='today'){
     return {movementAtFrom:ms0(n), movementAtTill:ms23(n), query:''};
   }
+  if(p==='yesterday'){
+    const y=new Date(n); y.setDate(n.getDate()-1);
+    return {movementAtFrom:ms0(y), movementAtTill:ms23(y), query:''};
+  }
   if(p==='week'){
     const mon=new Date(n); mon.setDate(n.getDate()-((n.getDay()||7)-1));
     return {movementAtFrom:ms0(mon), movementAtTill:ms23(n), query:''};
@@ -1868,6 +1874,11 @@ function gpsDateRange(p){
   if(p==='month'){
     const s=new Date(n.getFullYear(),n.getMonth(),1);
     return {movementAtFrom:ms0(s), movementAtTill:ms23(n), query:''};
+  }
+  if(p==='lastmonth'){
+    const s=new Date(n.getFullYear(),n.getMonth()-1,1);
+    const e=new Date(n.getFullYear(),n.getMonth(),0);
+    return {movementAtFrom:ms0(s), movementAtTill:ms23(e), query:''};
   }
 }
 
@@ -1976,7 +1987,7 @@ async function fetchGpsData(){
     setGpsStatus('Son yenilənmə: '+pad(now.getHours())+':'+pad(now.getMinutes())+':'+pad(now.getSeconds()),'var(--teal)');
     document.getElementById('gpsNote').textContent=
       'Məlumat: Geekbro Fleet Tracking · '+
-      {today:'Bu gün',week:'Bu həftə',lastweek:'Ötən həftə',month:'Bu ay'}[gpsPeriod];
+      {today:'Bu gün',yesterday:'Dünən',week:'Bu həftə',lastweek:'Ötən həftə',month:'Bu ay',lastmonth:'Ötən ay'}[gpsPeriod];
   } catch(e){
     setGpsStatus('Xəta: '+e.message,'var(--red)');
     if(!gpsToken) renderGpsStatic();
