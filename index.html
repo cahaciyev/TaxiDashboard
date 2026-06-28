@@ -18,8 +18,8 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
-  /* Canlı xəritə maşın pini — təmiz görünüş, hamar yerdəyişmə */
-  .car-pin{transition:transform 1.4s linear}
+  /* Canlı xəritə maşın pini — təmiz görünüş, fasiləsiz hamar yerdəyişmə */
+  .car-pin{transition:transform 5s linear}
   .leaflet-zoom-anim .car-pin{transition:none}
   .pin-glyph{transition:transform .8s ease;transform-box:fill-box;transform-origin:center}
   .car-tip{background:rgba(20,28,40,.82)!important;color:#fff!important;border:none!important;box-shadow:none!important;font:600 10px/1 Inter,sans-serif!important;padding:2px 6px!important;border-radius:5px!important;white-space:nowrap}
@@ -2160,7 +2160,7 @@ function toggleGpsMap(){
   const al=document.getElementById('mapAutoLbl');
   if(c) c.style.display=gpsMapVisible?'':'none';
   if(b) b.textContent=gpsMapVisible?'Gizlət':'Göstər';
-  if(al) al.textContent=gpsMapVisible?'● canlı — 8 san-da yenilənir':'';
+  if(al) al.textContent=gpsMapVisible?'● canlı — 4 san-da yenilənir':'';
   if(gpsMapVisible) fetchGpsMap();
 }
 
@@ -2356,7 +2356,7 @@ function switchTab(v){
     fetchGpsData();
     fetchGpsMap();
     window.gpsAutoTimer=setInterval(()=>{if(!document.hidden) fetchGpsData();},30000);
-    window.gpsMapTimer=setInterval(()=>{if(!document.hidden) fetchGpsMap();},8000);
+    window.gpsMapTimer=setInterval(()=>{if(!document.hidden) fetchGpsMap();},4000);
   }
   if(v==='avto'){
     alertsLastSeenCount=buildAlerts().filter(a=>a.sev==='crit').length;
