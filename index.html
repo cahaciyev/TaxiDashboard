@@ -18,6 +18,13 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
+  /* Canlı xəritə maşın ikonu — hamar yerdəyişmə */
+  .car-div-icon{transition:transform 1.4s linear}
+  .leaflet-zoom-anim .car-div-icon{transition:none}
+  .car-svg{transition:transform 1.2s ease}
+  .car-plate{transition:background-color .3s}
+</style>
+<style>
   :root{
     --deck:#0F1C30;--deck2:#162A45;--line:#27406A;
     --canvas:#EEF1F6;--card:#FFFFFF;--ink:#13243B;--mut:#6B7C93;
@@ -2052,37 +2059,65 @@ function initGpsMap(){
   return true;
 }
 
+function carColor(st){ return st==='ACTIVE'?'#1E9E8F':st==='IDLING'?'#E29A2E':'#7D90A8'; }
+
+// Yuxarıdan görünüşlü maşın forması (şimala — yuxarı baxır; angle ilə fırlanır)
+function carSvg(col,ang){
+  return `<svg class="car-svg" viewBox="0 0 40 64" width="30" height="48" style="transform:rotate(${ang}deg);display:block;filter:drop-shadow(0 2px 3px rgba(0,0,0,.5))">
+    <rect class="car-body" x="6" y="3" width="28" height="58" rx="12" fill="${col}" stroke="#fff" stroke-width="2.5"/>
+    <path d="M11 17 Q20 11 29 17 L29 24 Q20 20 11 24 Z" fill="#eaf6ff" opacity=".95"/>
+    <rect x="11.5" y="41" width="17" height="11" rx="4" fill="#dceefc" opacity=".85"/>
+    <rect x="2" y="15" width="5" height="12" rx="2.5" fill="#15171a"/>
+    <rect x="33" y="15" width="5" height="12" rx="2.5" fill="#15171a"/>
+    <rect x="2" y="40" width="5" height="12" rx="2.5" fill="#15171a"/>
+    <rect x="33" y="40" width="5" height="12" rx="2.5" fill="#15171a"/>
+  </svg>`;
+}
 function carIcon(v){
-  const st=v.status;
-  const col=st==='ACTIVE'?'#1E9E8F':st==='IDLING'?'#E29A2E':'#7D90A8';
-  const ang=(v.angle||0);
-  const html=`<div style="display:flex;flex-direction:column;align-items:center;line-height:1">
-    <div style="background:${col};color:#fff;font:800 10px/1 Inter,sans-serif;padding:2px 5px;border-radius:5px;white-space:nowrap;box-shadow:0 1px 3px rgba(0,0,0,.35);margin-bottom:1px">${v.plateNumber||''}</div>
-    <div style="width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:13px solid ${col};transform:rotate(${ang}deg);filter:drop-shadow(0 1px 1px rgba(0,0,0,.4))"></div>
+  const col=carColor(v.status), ang=(v.angle||0);
+  const html=`<div class="car-wrap" style="display:flex;flex-direction:column;align-items:center;line-height:1">
+    <div class="car-plate" style="background:${col};color:#fff;font:800 11px/1 Inter,sans-serif;padding:3px 7px;border-radius:7px;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.45);margin-bottom:2px;border:1.5px solid rgba(255,255,255,.7)">${v.plateNumber||''}</div>
+    ${carSvg(col,ang)}
   </div>`;
-  return L.divIcon({html, className:'car-div-icon', iconSize:[64,32], iconAnchor:[32,28]});
+  return L.divIcon({html, className:'car-div-icon', iconSize:[40,70], iconAnchor:[20,44]});
+}
+function popHtml(v){
+  const pad=n=>String(n).padStart(2,'0');
+  const gp=v.gpsPoint||{};
+  const t=gp.timestamp?new Date(gp.timestamp):null;
+  const tt=t?pad(t.getDate())+'.'+pad(t.getMonth()+1)+' '+pad(t.getHours())+':'+pad(t.getMinutes()):'—';
+  const stTxt=v.status==='ACTIVE'?'Hərəkətdə':v.status==='IDLING'?'Boş dayanma (mühərrik işləyir)':'Dayanıb / söndürülüb';
+  return `<div style="font:600 13px Inter,sans-serif;min-width:150px">
+    <b style="font-size:14px">${v.plateNumber||''}</b><br>
+    <span style="color:#666">Status:</span> ${stTxt}<br>
+    <span style="color:#666">Sürət:</span> <b>${v.speed||0} km/s</b><br>
+    <span style="color:#666">Son siqnal:</span> ${tt}${v.address?'<br><span style="color:#666">Ünvan:</span> '+v.address:''}</div>`;
 }
 
 function updateGpsMarkers(vehicles){
   if(!gpsMapObj) return;
-  const pad=n=>String(n).padStart(2,'0');
   const seen={}; const bounds=[];
   vehicles.forEach(v=>{
     const gp=v.gpsPoint; if(!gp||gp.latitude==null||gp.longitude==null) return;
     const ll=[gp.latitude, gp.longitude]; bounds.push(ll);
     const key=v.plateNumber||v.vehicleId||v.imei; seen[key]=1;
-    const t=gp.timestamp?new Date(gp.timestamp):null;
-    const tt=t?pad(t.getDate())+'.'+pad(t.getMonth()+1)+' '+pad(t.getHours())+':'+pad(t.getMinutes()):'—';
-    const stTxt=v.status==='ACTIVE'?'Hərəkətdə':v.status==='IDLING'?'Boş dayanma (mühərrik işləyir)':'Dayanıb / söndürülüb';
-    const pop=`<div style="font:600 13px Inter,sans-serif;min-width:150px">
-      <b style="font-size:14px">${v.plateNumber||''}</b><br>
-      <span style="color:#666">Status:</span> ${stTxt}<br>
-      <span style="color:#666">Sürət:</span> <b>${v.speed||0} km/s</b><br>
-      <span style="color:#666">Son siqnal:</span> ${tt}${v.address?'<br><span style="color:#666">Ünvan:</span> '+v.address:''}</div>`;
-    if(gpsMarkers[key]){
-      gpsMarkers[key].setLatLng(ll).setIcon(carIcon(v)).setPopupContent(pop);
+    const col=carColor(v.status), ang=(v.angle||0);
+    const mk=gpsMarkers[key];
+    if(mk){
+      // Mövcud marker — ikonu yenidən qurmadan yenilə ki, hamar sürüşsün
+      mk.setLatLng(ll);
+      const el=mk._icon;
+      if(el){
+        const svg=el.querySelector('.car-svg'); if(svg) svg.style.transform='rotate('+ang+'deg)';
+        el.querySelectorAll('.car-body').forEach(b=>b.setAttribute('fill',col));
+        const pl=el.querySelector('.car-plate'); if(pl) pl.style.background=col;
+      }
+      mk.setPopupContent(popHtml(v));
     } else {
-      gpsMarkers[key]=L.marker(ll,{icon:carIcon(v)}).addTo(gpsMapObj).bindPopup(pop);
+      const nm=L.marker(ll,{icon:carIcon(v)}).addTo(gpsMapObj).bindPopup(popHtml(v));
+      // İlk əlavədə sürüşmə animasiyası olmasın
+      if(nm._icon){ nm._icon.style.transition='none'; requestAnimationFrame(()=>{ if(nm._icon) nm._icon.style.transition=''; }); }
+      gpsMarkers[key]=nm;
     }
   });
   // Köhnə (siyahıda olmayan) markerləri sil
@@ -2311,11 +2346,13 @@ function switchTab(v){
   document.getElementById('banner').style.display = v === 'ov' ? '' : 'none';
   // GPS auto-refresh: yalnız GPS view açıq olanda canlı durumu yenilə
   if(window.gpsAutoTimer){clearInterval(window.gpsAutoTimer);window.gpsAutoTimer=null;}
+  if(window.gpsMapTimer){clearInterval(window.gpsMapTimer);window.gpsMapTimer=null;}
   if(v==='gps'){
     fetchGpsData();
     fetchGpsMap();
-    const al=document.getElementById('mapAutoLbl'); if(al) al.textContent='● 30 san-da avtomatik yenilənir';
-    window.gpsAutoTimer=setInterval(()=>{if(!document.hidden){ fetchGpsData(); fetchGpsMap(); }},30000);
+    const al=document.getElementById('mapAutoLbl'); if(al) al.textContent='● canlı — 8 san-da yenilənir';
+    window.gpsAutoTimer=setInterval(()=>{if(!document.hidden) fetchGpsData();},30000);
+    window.gpsMapTimer=setInterval(()=>{if(!document.hidden) fetchGpsMap();},8000);
   }
   if(v==='avto'){
     alertsLastSeenCount=buildAlerts().filter(a=>a.sev==='crit').length;
