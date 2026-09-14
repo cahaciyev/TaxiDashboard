@@ -284,6 +284,20 @@
   .bar-lab .pc{font-weight:800}.bar{height:9px;background:#e9edf3;border-radius:6px;overflow:hidden}.bar i{display:block;height:100%;border-radius:6px}
   .vfoot{display:flex;justify-content:space-between;margin-top:13px;padding-top:11px;border-top:1px solid #eef1f5}
   .vfoot div{font-size:11px;color:var(--mut)}.vfoot b{display:block;font-size:14px;color:var(--ink);font-weight:700;margin-top:1px}
+  /* ── ODOMETR ── */
+  .odo-row{display:flex;align-items:center;gap:10px;margin-top:12px;padding-top:12px;border-top:1px solid #eef1f5}
+  .odo-ic{width:36px;height:36px;border-radius:10px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(135deg,#e8f0ff,#dbe6ff);color:#2D6CDF}
+  .odo-ic svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+  .odo-ic.stale{background:linear-gradient(135deg,#f1f3f7,#e7eaf0);color:#9aa7b8}
+  .odo-info{flex:1;min-width:0}
+  .odo-val{font-family:'JetBrains Mono',monospace;font-weight:800;font-size:16px;color:var(--ink);letter-spacing:-.02em;line-height:1.2}
+  .odo-val small{font-size:11px;font-weight:700;color:var(--mut);margin-left:2px}
+  .odo-sub{font-size:11px;font-weight:600;color:var(--teal);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .odo-sub.muted{color:var(--mut)}
+  .odo-edit{border:none;background:#f5f8fd;color:var(--mut);border-radius:9px;width:30px;height:30px;flex:0 0 auto;
+    font-size:13px;cursor:pointer;transition:background .15s,color .15s}
+  .odo-edit:hover{background:#e6edf8;color:var(--ink)}
   .filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
   .fbtn{border:1px solid #dbe2ec;background:#fff;border-radius:999px;padding:7px 15px;font:inherit;font-size:13px;font-weight:600;color:var(--mut);cursor:pointer}
   .fbtn.on{background:var(--deck);color:#fff;border-color:var(--deck)}
@@ -629,6 +643,36 @@
       <button onclick="rptClose()" style="border:none;background:none;font-size:20px;cursor:pointer;color:var(--mut);line-height:1">✕</button>
     </div>
     <div id="rptBody"></div>
+  </div>
+</div>
+
+<!-- ODOMETR MODAL -->
+<div class="exp-ov" id="odoOv" onclick="if(event.target===this)odoClose()">
+  <div class="exp-sheet" style="max-width:380px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
+      <h3 style="font-size:16px;font-weight:800;display:flex;align-items:center;gap:7px;white-space:nowrap">
+        <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#2D6CDF" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></svg>
+        ODO metr
+      </h3>
+      <button onclick="odoClose()" style="border:none;background:none;font-size:20px;cursor:pointer;color:var(--mut);line-height:1">✕</button>
+    </div>
+    <div class="exp-fld">
+      <label>Maşın</label>
+      <div id="odoPlateLbl" style="font-family:'JetBrains Mono',monospace;font-weight:800;font-size:15px;color:var(--ink)"></div>
+    </div>
+    <div class="exp-fld">
+      <label>Hazırkı ODO (km)</label>
+      <input type="number" id="odoKm" placeholder="məs. 312500" min="0" step="1">
+    </div>
+    <div class="exp-fld">
+      <label>Tarix</label>
+      <input type="date" id="odoDate">
+    </div>
+    <div class="hint" id="odoHint" style="margin-bottom:16px;line-height:1.5"></div>
+    <div class="exp-modal-actions">
+      <button class="exp-btn-cancel" onclick="odoClose()">Ləğv et</button>
+      <button class="exp-btn-save" onclick="odoSave()">Yadda saxla</button>
+    </div>
   </div>
 </div>
 
@@ -1791,6 +1835,12 @@ function renderCars(f){
     const mExp=selMonth?totalExpForPlateMonth(c.p,selMonth.full):c.exp;
     const mNet=mInc-mExp;
     const mLabel=selMonth?selMonth.full:'(ümumi)';
+    const ob=odoBase[c.p];
+    const curOdo=odoCurrent(c.p);
+    const liveKm=odoLiveKm[c.p]||0;
+    const odoSub = ob
+      ? (ob.date.split('-').reverse().join('.')+'-dən '+(liveKm>0?'+'+fmt(Math.round(liveKm))+' km':'yenilənir…'))
+      : (curOdo!=null?'sayğac əlavə edilməyib':'ODO məlumatı yoxdur');
     return `<div class="vcard${isArrested?' arrested':''}" style="cursor:pointer" onclick="openFineModal('${c.p}')">
       ${isArrested?`<div class="arrest-banner">🚔 Avtomobil həbsdədir!</div>`:''}
       <div class="vtop">
@@ -1804,6 +1854,14 @@ function renderCars(f){
         <div>Gəlir<b class="num">${fmt(mInc)} ₼</b></div>
         <div style="color:${mExp>0?'var(--red)':'inherit'}">Xərc<b class="num">${mExp>0?fmt(mExp)+' ₼':'—'}</b></div>
         <div style="text-align:right;color:${mNet>=0?'var(--teal)':'var(--red)'}">Xalis<b class="num">${fmt(mNet)} ₼</b></div>
+      </div>
+      <div class="odo-row">
+        <div class="odo-ic${ob?'':' stale'}"><svg viewBox="0 0 24 24"><path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></svg></div>
+        <div class="odo-info">
+          <div class="odo-val">${curOdo!=null?fmt(Math.round(curOdo)):'—'} <small>km</small></div>
+          <div class="odo-sub${ob?'':' muted'}">${odoSub}</div>
+        </div>
+        <button class="odo-edit" title="ODO əlavə et / düzəlt" onclick="event.stopPropagation();odoOpen('${c.p}')">✏</button>
       </div>
       <div id="${fid}" class="fine-badge" style="display:none"></div>
     </div>`;
@@ -2212,6 +2270,77 @@ const _origSwitchTabForGps = typeof switchTab === 'function' ? switchTab : null;
   await fetchGpsData();
 })();
 
+// ============ ODOMETR (əl ilə köklənən əsas ODO + Geekbro-dan canlı əlavə) ============
+let odoBase   = JSON.parse(localStorage.getItem('odoBase')||'{}');   // {plate:{km,date}}
+let odoLiveKm = {};  // plate -> baza tarixindən bəri Geekbro-dan gələn məsafə (km)
+let odoEditPlate = null;
+
+function normPlate(s){ return String(s||'').toUpperCase().replace(/[^A-Z0-9]/g,''); }
+
+function odoCurrent(plate){
+  const ob = odoBase[plate];
+  if(ob) return ob.km + (odoLiveKm[plate]||0);
+  const a = avto.find(x=>x.p===plate);
+  return a ? a.odo : null;
+}
+
+async function computeOdoLive(){
+  const groups = {};
+  Object.entries(odoBase).forEach(([p,ob])=>{
+    if(!ob || ob.date==null || isNaN(ob.km)) return;
+    (groups[ob.date] = groups[ob.date]||[]).push(p);
+  });
+  const dates = Object.keys(groups);
+  if(!dates.length) return;
+  await Promise.all(dates.map(async date=>{
+    try{
+      const from = new Date(date+'T00:00:00');
+      const range = { movementAtFrom: from.getTime(), movementAtTill: Date.now(), query:'' };
+      const endpoint = `${GB_PROXY}?companyId=${GB_CID}&direction=ASC&page=0&size=100&sort=`;
+      const r = await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(range)});
+      if(!r.ok) return;
+      const data = await r.json();
+      const content = data.content||[];
+      groups[date].forEach(p=>{
+        const np = normPlate(p);
+        const hit = content.find(d=>normPlate(d.vehicle?.plateNumber)===np);
+        odoLiveKm[p] = hit ? (hit.dailyKm||0) : 0;
+      });
+    }catch(e){ console.warn('ODO Geekbro sorğusu xətası ('+date+'):', e.message); }
+  }));
+}
+
+function odoOpen(plate){
+  odoEditPlate = plate;
+  document.getElementById('odoPlateLbl').textContent = plate;
+  const ob = odoBase[plate];
+  const cur = odoCurrent(plate);
+  document.getElementById('odoKm').value = cur!=null ? Math.round(cur) : '';
+  document.getElementById('odoDate').value = new Date().toISOString().slice(0,10);
+  document.getElementById('odoHint').textContent = ob
+    ? `Son qeyd: ${ob.date} tarixində ${fmt(ob.km)} km. Yeni oxunuşu saxlasanız, sayğac bu andan yenidən başlayacaq və Geekbro-dan gələn məsafə bunun üzərinə əlavə olunacaq.`
+    : 'Sayğacın hazırkı göstəricisini daxil edin. Bu andan sonra Geekbro GPS-dən gələn məsafə avtomatik bu rəqəmin üzərinə əlavə olunacaq.';
+  document.getElementById('odoOv').classList.add('open');
+}
+function odoClose(){ document.getElementById('odoOv').classList.remove('open'); odoEditPlate=null; }
+
+async function odoSave(){
+  const km = parseFloat(document.getElementById('odoKm').value);
+  const date = document.getElementById('odoDate').value;
+  if(!odoEditPlate || isNaN(km) || km<0 || !date){ alert('ODO km və tarix düzgün daxil edin'); return; }
+  odoBase[odoEditPlate] = {km, date};
+  odoLiveKm[odoEditPlate] = 0;
+  localStorage.setItem('odoBase', JSON.stringify(odoBase));
+  odoClose();
+  renderCars(curOwner);
+  await computeOdoLive();
+  renderCars(curOwner);
+}
+
+document.addEventListener('DOMContentLoaded', ()=>{
+  computeOdoLive().then(()=>renderCars(curOwner));
+});
+
 // ============ RASXODLAR ============
 let expenseLog = []; // Sheets-dən yüklənir
 const EXP_CATS = {
@@ -2374,11 +2503,16 @@ function switchTab(v){
   // GPS auto-refresh: yalnız GPS view açıq olanda canlı durumu yenilə
   if(window.gpsAutoTimer){clearInterval(window.gpsAutoTimer);window.gpsAutoTimer=null;}
   if(window.gpsMapTimer){clearInterval(window.gpsMapTimer);window.gpsMapTimer=null;}
+  if(window.carsOdoTimer){clearInterval(window.carsOdoTimer);window.carsOdoTimer=null;}
   if(v==='gps'){
     fetchGpsData();
     fetchGpsMap();
     window.gpsAutoTimer=setInterval(()=>{if(!document.hidden) fetchGpsData();},30000);
     window.gpsMapTimer=setInterval(()=>{if(!document.hidden) fetchGpsMap(true);},1000);
+  }
+  if(v==='cars'){
+    computeOdoLive().then(()=>renderCars(curOwner));
+    window.carsOdoTimer=setInterval(()=>{if(!document.hidden) computeOdoLive().then(()=>renderCars(curOwner));},60000);
   }
   if(v==='avto'){
     alertsLastSeenCount=buildAlerts().filter(a=>a.sev==='crit').length;
